@@ -3,7 +3,7 @@ var fs   = require('fs');
 
 namespace('aws', function () {
 	
-	desc('Prerequisite to most jake tasks.  This loads credentials in NodeJS.');
+	desc('Prerequisite to most jake tasks.  This checks for credentials in aws-cli.');
 	task('loadCredentials', { async: true }, { breakOnError: true }, function() {
     var ex = jake.createExec(['aws configure get aws_access_key_id']);
     ex.addListener('stdout', function (msg) {

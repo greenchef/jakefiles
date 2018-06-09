@@ -22,6 +22,8 @@ namespace('s3', function () {
 		var config = jake.Task["aws:loadCredentials"].value
 		var cmds = [ util.format('aws s3 ls s3://%s', bucket_name) ];
 		
-		jake.exec(cmds, { printStdout: true });
+		jake.exec(cmds, { printStdout: true }, function(){
+			complete();
+		});
 	});
 });
