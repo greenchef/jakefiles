@@ -1,5 +1,10 @@
 ## Jake Files
 
+### Prerequisites
+1. aws-cli installed and configured
+2. docker installed, docker hub account, logged into docker
+3. Node and stuff
+
 ### Quick Start
 1. Clone repo
 2. cd to jakefiles
