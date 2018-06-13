@@ -5,7 +5,9 @@
   "main": "Jakefile.js",
   "dependencies": {
     "aws-sdk": "^2.35.0",
-    "jake": "^8.0.16"
+    "axios": "^0.18.0",
+    "jake": "^8.0.16",
+    "underscore": "^1.9.1"
   },
   "devDependencies": {},
   "scripts": {
