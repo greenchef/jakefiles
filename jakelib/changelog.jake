@@ -1,4 +1,5 @@
 const axios = require('axios');
+const q = require('q');
 
 const github = axios.create({
   baseURL: 'https://api.github.com',
@@ -49,10 +50,13 @@ namespace('changelog', function () {
       }
     });
 
+    // build jira calls
+    let jira_calls = formatted_commits.map((c) => { return jira.get(`/${c.jira_id}`) })
     // fetch jira data
-    let issues = await axios.all(formatted_commits.map((c) => { return jira.get(`/${c.jira_id}`) }))
+    let issues = await q.allSettled(jira_calls)
     issues.forEach((issue, idx) => {
-      formatted_commits[idx]['jira_summary'] = issue.data.fields.summary;
+      if(issue.state == 'fulfilled')
+        formatted_commits[idx]['jira_summary'] = issue.value.data.fields.summary;
     });
 
     console.log(formatted_commits);

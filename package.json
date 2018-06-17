@@ -7,6 +7,7 @@
     "aws-sdk": "^2.35.0",
     "axios": "^0.18.0",
     "jake": "^8.0.16",
+    "q": "^1.5.1",
     "underscore": "^1.9.1"
   },
   "devDependencies": {},
