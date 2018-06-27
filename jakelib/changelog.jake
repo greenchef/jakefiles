@@ -1,5 +1,6 @@
 const axios = require('axios');
 const q = require('q');
+const _ = require('underscore');
 
 const github = axios.create({
   baseURL: 'https://api.github.com',
@@ -81,15 +82,46 @@ namespace('changelog', function () {
 
 
   async function brief(path,commit) {
-
-    var ex = jake.createExec([`cd  ${path} && git log --grep="GCT-" ${commit}..HEAD --pretty=format:"##### %s %n - %h %n - %an"`]);
-    
+    //var ex = jake.createExec([`cd  ${path} && git log --grep="GCT-" ${commit}..HEAD --pretty=format:"##### %s %n - %h %n - %an"`]);
+    var ex = jake.createExec([`cd  ${path} && git log ${commit}..HEAD --pretty=format:"%s~$~"`]);
+    const d = new Date().toISOString().toString().substring(0,10);
+    console.log(`### ${d} \n`);
     ex.addListener('stdout', function (msg) {
       msg = msg.toString();
-     
-      console.log(msg)
+      const r = /(\[.*?\])/;
+      let parsed = msg.match(/(\[.*?\])/gm);
+      let jiras = [];
+      parsed = _.chain(parsed).uniq();
+      parsed.forEach((s) => {
+        let idx = s.search(r);
+        if(idx > -1) {
+          let l_idx = s.indexOf(']', idx);
+          let jira_id = s.substring(idx+1, l_idx);
+          if(jira_id.includes('-')) {
+            jiras.push({id: jira_id, summary: ''})
+          }
+        }
+      });
 
-      complete();
+      // build jira calls
+      let jira_calls = jiras.map((c) => { return jira.get(`/${c.id}`) })
+      // fetch jira data
+      q.allSettled(jira_calls).then(issues => {
+        issues.forEach((issue, idx) => {
+          console.log(issue.value.data)
+          if(issue.state == 'fulfilled'){
+            jiras[idx]['summary'] = issue.value.data.fields.summary || '';
+          }
+        });
+       
+        jiras.forEach(j => {
+          //console.log(`##### [${j.id}] - ${j.summary}`)
+        })
+        complete();
+      }).catch(err => {
+        console.log(err);
+        complete();
+      })
     });
     ex.run();
  
