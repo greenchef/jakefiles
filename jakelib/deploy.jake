@@ -1,4 +1,5 @@
 var util = require('util');
+const { PATH_TO_SERVER, PATH_TO_CONSOLE, SHELL_IS_FISH } = process.env;
 
 namespace('deploy', function () {
 
@@ -21,21 +22,21 @@ namespace('deploy', function () {
   const apps = {
     api: {
       cmds: [
-        'cd ~/Greenchef/greenchef/services/server-greenchef', 
+        `cd ${PATH_TO_SERVER}`, 
         'docker build -t greenchef/api:{{stage_name}} -f Dockerfile-api-upgrade . --no-cache',
         'docker push greenchef/api:{{stage_name}}'
       ]
     },
     worker: {
       cmds: [
-        'cd ~/Greenchef/greenchef/services/server-greenchef', 
+        `cd ${PATH_TO_SERVER}`, 
         'docker build -t greenchef/worker:{{stage_name}} -f Dockerfile-worker-upgrade . --no-cache',
         'docker push greenchef/worker:{{stage_name}}'
       ]
     },
     console: {
       cmds: [
-        'cd ~/Greenchef/console-web',
+        `cd ${PATH_TO_CONSOLE}`,
         'ls',
         './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build=staging',
         'docker build -t greenchef/console:{{stage_name}} . --no-cache',
@@ -48,7 +49,7 @@ namespace('deploy', function () {
   desc('Deploy application to ECS. | [stage_name,app_name]');
 	task('app', ['aws:loadCredentials'], { async: false }, function(stage_name,app_name) {
     let vars = {stage_name, app_name};
-    let cmd = replacer(apps[app_name].cmds.join(' && '), vars);
+    let cmd = replacer(apps[app_name].cmds.join(SHELL_IS_FISH ? '; and ' : ' && '), vars);
     jake.exec(cmd, { printStdout: true }, function(){
       jake.Task['ecs:restart'].execute(stage_name, `${app_name}-${stage_name}`);
       complete();
