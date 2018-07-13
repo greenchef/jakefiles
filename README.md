@@ -9,6 +9,7 @@
 1. npm i -g jake 
 2. Clone repo
 3. cd to jakefiles
+4. cp the `example.env` to `.env` and add appropriate values
 4. npm i
 5. jake -T
 
