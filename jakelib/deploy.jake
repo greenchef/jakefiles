@@ -49,7 +49,7 @@ namespace('deploy', function () {
   desc('Deploy application to ECS. | [stage_name,app_name]');
 	task('app', ['aws:loadCredentials'], { async: false }, function(stage_name,app_name) {
     let vars = {stage_name, app_name};
-    let cmd = replacer(apps[app_name].cmds.join(SHELL_IS_FISH ? '; and ' : ' && '), vars);
+    let cmd = replacer(apps[app_name].cmds.join(' && '), vars);
     jake.exec(cmd, { printStdout: true }, function(){
       jake.Task['ecs:restart'].execute(stage_name, `${app_name}-${stage_name}`);
       complete();
