@@ -19,3 +19,9 @@ This is a collection of tasks executed with the Jake task runner. See http://jak
 ### Contribute
 Feel free to make additions to this repo.  
 If you are changing the namespace structure or an existing task please submit a PR.
+
+### Example Deploy Command
+Deploy the "console" app (Console-Web) to the "staging" ECS cluster.
+```bash
+jake deploy:app['staging','console']
+```

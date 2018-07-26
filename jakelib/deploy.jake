@@ -23,15 +23,15 @@ namespace('deploy', function () {
     api: {
       cmds: [
         `cd ${PATH_TO_SERVER}`, 
-        'docker build -t greenchef/api:{{stage_name}} -f Dockerfile-api-upgrade . --no-cache',
-        'docker push greenchef/api:{{stage_name}}'
+        'docker build -t greenchef/api:{{cluster_name}} -f Dockerfile-api-upgrade . --no-cache',
+        'docker push greenchef/api:{{cluster_name}}'
       ]
     },
     worker: {
       cmds: [
         `cd ${PATH_TO_SERVER}`, 
-        'docker build -t greenchef/worker:{{stage_name}} -f Dockerfile-worker-upgrade . --no-cache',
-        'docker push greenchef/worker:{{stage_name}}'
+        'docker build -t greenchef/worker:{{cluster_name}} -f Dockerfile-worker-upgrade . --no-cache',
+        'docker push greenchef/worker:{{cluster_name}}'
       ]
     },
     console: {
@@ -39,19 +39,19 @@ namespace('deploy', function () {
         `cd ${PATH_TO_CONSOLE}`,
         'ls',
         './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build=staging',
-        'docker build -t greenchef/console:{{stage_name}} . --no-cache',
-        'docker push greenchef/console:{{stage_name}}'
+        'docker build -t greenchef/console:{{cluster_name}} . --no-cache',
+        'docker push greenchef/console:{{cluster_name}}'
       ]
     }
   }
 
 
-  desc('Deploy application to ECS. | [stage_name,app_name]');
-	task('app', ['aws:loadCredentials'], { async: false }, function(stage_name,app_name) {
-    let vars = {stage_name, app_name};
+  desc('Deploy application to ECS. | [cluster_name,app_name]');
+	task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name,app_name) {
+    let vars = {cluster_name, app_name};
     let cmd = replacer(apps[app_name].cmds.join(' && '), vars);
     jake.exec(cmd, { printStdout: true }, function(){
-      jake.Task['ecs:restart'].execute(stage_name, `${app_name}-${stage_name}`);
+      jake.Task['ecs:restart'].execute(cluster_name, `${app_name}-${cluster_name}`);
       complete();
     });
     
