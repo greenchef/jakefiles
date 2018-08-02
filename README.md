@@ -25,3 +25,10 @@ Deploy the "console" app (Console-Web) to the "staging" ECS cluster.
 ```bash
 jake deploy:app['staging','console']
 ```
+#### ZSH Users Special Syntax
+According to the [official documentation](http://jakejs.com/docs), ZSH users may need to do one of two things to run `jake` commands:
+- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[staging,console]'`
+
+-- OR --
+
+- Permanently deactivate file-globbing for the `jake` command by adding this line to your `.zshrc` file: `alias jake="noglob jake"`
