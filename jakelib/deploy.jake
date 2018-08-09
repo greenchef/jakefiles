@@ -1,5 +1,5 @@
 var util = require('util');
-const { PATH_TO_SERVER, PATH_TO_CONSOLE, SHELL_IS_FISH } = process.env;
+const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_SHIPPING, SHELL_IS_FISH } = process.env;
 
 namespace('deploy', function () {
 
@@ -42,9 +42,15 @@ namespace('deploy', function () {
         'docker build -t greenchef/console:{{cluster_name}} . --no-cache',
         'docker push greenchef/console:{{cluster_name}}'
       ]
+    },
+    'shipping-api': {
+      cmds: [
+        `cd ${PATH_TO_SHIPPING}`,
+        'docker build -t greenchef/shipping:{{cluster_name}} -f docker/api .',
+        'docker push greenchef/shipping:{{cluster_name}}'
+      ]
     }
   }
-
 
   desc('Deploy application to ECS. | [cluster_name,app_name]');
 	task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name,app_name) {

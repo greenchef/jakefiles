@@ -25,6 +25,15 @@ Deploy the "console" app (Console-Web) to the "staging" ECS cluster.
 ```bash
 jake deploy:app['staging','console']
 ```
+
+### To Deploy Shipping to StagingECS
+1. create a staging branch
+2. merge in branch `GCT-314-get-shipping-working` (this branch is not in prod)
+3. Deploy shipping to staging ECS
+```bash
+jake deploy:app['staging','shipping-api']
+```
+
 #### ZSH Users Special Syntax
 According to the [official documentation](http://jakejs.com/docs), ZSH users may need to do one of two things to run `jake` commands:
 - Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[staging,console]'`
