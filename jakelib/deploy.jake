@@ -1,5 +1,5 @@
 var util = require('util');
-const { PATH_TO_SERVER, PATH_TO_CONSOLE, SHELL_IS_FISH } = process.env;
+const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_CONSUMER, SHELL_IS_FISH } = process.env;
 
 namespace('deploy', function () {
 
@@ -42,23 +42,35 @@ namespace('deploy', function () {
     },
     console: {
       cmds: [
-        `cd ${PATH_TO_CONSOLE}`,
-        'ls',
-        './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build=staging',
-        'docker build -t greenchef/console:{{cluster_name}} . --no-cache',
-        'docker push greenchef/console:{{cluster_name}}',
+        `cd ${PATH_TO_CONSOLE}`, 
+        'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+        './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build={{cluster_name}}',
+        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
+        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker image prune -a -f'
+      ]
+    },
+    consumer: {
+      cmds: [
+        `cd ${PATH_TO_CONSUMER}`, 
+        'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+        './node_modules/.bin/gulp staging-gc-build',
+        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
+        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker image prune -a -f'
       ]
     }
   }
 
 
-  desc('Deploy application to ECS. | [cluster_name,app_name,service_name]');
-	task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name,app_name,service_name) {
-    let vars = {cluster_name, app_name, service_name};
+  desc('Deploy application to ECS. | [cluster_name,app_name]');
+	task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name,app_name) {
+    let vars = {cluster_name, app_name};
     let cmd = replacer(apps[app_name].cmds.join(' && '), vars);
     jake.exec(cmd, { printStdout: true }, function(){
-      jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${service_name}`);
+      jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${app_name}`);
       complete();
     });
     

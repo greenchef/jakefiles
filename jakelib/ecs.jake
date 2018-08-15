@@ -12,6 +12,8 @@ namespace('ecs', function () {
   
   desc('Restart a service. | [cluster_name,service_name]');
 	task('restart', ['aws:loadCredentials'], { async: false }, function(cluster_name, service_name) {
+		console.log(cluster_name);
+		console.log(service_name);
 		var config = jake.Task["aws:loadCredentials"].value
 		var cmds = [ util.format('aws ecs update-service --cluster %s --service %s --force-new-deployment', cluster_name, service_name) ];
     if(cluster_name.indexOf('prod') > -1)
