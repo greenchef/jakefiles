@@ -1,5 +1,5 @@
 var util = require('util');
-const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_CONSUMER, SHELL_IS_FISH } = process.env;
+const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_CONSUMER, PATH_TO_SHIPPING } = process.env;
 
 namespace('deploy', function () {
 
@@ -71,9 +71,18 @@ namespace('deploy', function () {
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker image prune -a -f'
       ]
+    },
+    'shipping-api': {
+      cmds: [
+        `cd ${PATH_TO_SHIPPING}`,
+        'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+        'docker build -t {{cluster_name}}-{{app_name}} -f terraform_docker/api . --no-cache',
+        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker image prune -a -f'
+      ]
     }
   }
-
 
   desc('Deploy application to ECS. | [cluster_name,app_name]');
 	task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name,app_name) {
