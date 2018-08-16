@@ -20,11 +20,21 @@ namespace('deploy', function () {
   };
 
   const apps = {
-    api: {
+    consoleapi: {
       cmds: [
         `cd ${PATH_TO_SERVER}`, 
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-api-upgrade . --no-cache',
+        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
+        'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
+        'docker image prune -a -f'
+      ]
+    },
+    'web-api': {
+      cmds: [
+        `cd ${PATH_TO_SERVER}`, 
+        'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-api . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker image prune -a -f'
@@ -34,7 +44,7 @@ namespace('deploy', function () {
       cmds: [
         `cd ${PATH_TO_SERVER}`, 
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker-upgrade . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker image prune -a -f'
@@ -74,6 +84,16 @@ namespace('deploy', function () {
       complete();
     });
     
+  });
+
+  desc('Deploy application to ECS. | [cluster_name]');
+	task('all', ['aws:loadCredentials'], { async: false }, function(cluster_name,app_name) {
+    Object.keys(apps).forEach(k => {
+      jake.exec(cmd, { printStdout: true }, function(){
+        jake.Task['deploy:app'].execute(cluster_name, k);
+        complete();
+      });
+    })
   });
 
 });
