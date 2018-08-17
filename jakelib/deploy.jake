@@ -76,7 +76,17 @@ namespace('deploy', function () {
       cmds: [
         `cd ${PATH_TO_SHIPPING}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-        'docker build -t {{cluster_name}}-{{app_name}} -f terraform_docker/api . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} -f docker/api . --no-cache',
+        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker image prune -a -f'
+      ]
+    },
+    'shipping-worker': {
+      cmds: [
+        `cd ${PATH_TO_SHIPPING}`,
+        'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker image prune -a -f'
