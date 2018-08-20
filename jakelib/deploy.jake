@@ -1,5 +1,5 @@
 var util = require('util');
-const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_CONSUMER, PATH_TO_SHIPPING } = process.env;
+const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_CONSUMER, PATH_TO_SHIPPING, PATH_TO_INVENTORY } = process.env;
 
 namespace('deploy', function () {
 
@@ -34,9 +34,9 @@ namespace('deploy', function () {
       cmds: [
         `cd ${PATH_TO_SERVER}`, 
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-api . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
+        'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
         'docker image prune -a -f'
       ]
     },
@@ -85,6 +85,16 @@ namespace('deploy', function () {
     'shipping-worker': {
       cmds: [
         `cd ${PATH_TO_SHIPPING}`,
+        'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
+        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker image prune -a -f'
+      ]
+    },
+    'inventory-worker': {
+      cmds: [
+        `cd ${PATH_TO_INVENTORY}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',

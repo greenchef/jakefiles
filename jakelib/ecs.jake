@@ -16,9 +16,6 @@ namespace('ecs', function () {
 		console.log(service_name);
 		var config = jake.Task["aws:loadCredentials"].value
 		var cmds = [ util.format('aws ecs update-service --cluster %s --service %s --force-new-deployment', cluster_name, service_name) ];
-    if(cluster_name.indexOf('prod') > -1)
-      console.log('What do we say to production commands?... Not today')
-    else
-		  jake.exec(cmds, { printStdout: true });
+		jake.exec(cmds, { printStdout: true });
 	});
 });
