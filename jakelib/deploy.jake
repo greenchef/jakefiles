@@ -110,6 +110,7 @@ namespace('deploy', function () {
     let cmd = replacer(apps[app_name].cmds.join(' && '), vars);
     jake.exec(cmd, { printStdout: true }, function(){
       jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${app_name}`);
+      jake.Task['slack:deployment'].execute(cluster_name, app_name);
       complete();
     });
     
@@ -120,6 +121,7 @@ namespace('deploy', function () {
     Object.keys(apps).forEach(k => {
       jake.exec(cmd, { printStdout: true }, function(){
         jake.Task['deploy:app'].execute(cluster_name, k);
+        jake.Task['slack:deployment'].execute(cluster_name, k);
         complete();
       });
     })
