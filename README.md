@@ -23,7 +23,7 @@ If you are changing the namespace structure or an existing task please submit a 
 ### Example Deploy Command
 Deploy the "console" app (Console-Web) to the "staging" ECS cluster.
 ```bash
-jake deploy:app['staging','console']
+jake deploy:app['staging-gc','console']
 ```
 
 ### To Deploy Shipping to StagingECS
@@ -31,12 +31,12 @@ jake deploy:app['staging','console']
 2. merge in branch `GCT-314-get-shipping-working` (this branch is not in prod)
 3. Deploy shipping to staging ECS
 ```bash
-jake deploy:app['staging','shipping-api']
+jake deploy:app['staging-gc','shipping-api']
 ```
 
 #### ZSH Users Special Syntax
 According to the [official documentation](http://jakejs.com/docs), ZSH users may need to do one of two things to run `jake` commands:
-- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[staging,console]'`
+- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[staging-gc,console]'`
 
 -- OR --
 
