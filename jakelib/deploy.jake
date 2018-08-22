@@ -1,8 +1,6 @@
-var util = require('util');
-const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_CONSUMER, PATH_TO_SHIPPING, PATH_TO_INVENTORY } = process.env;
+const { serviceToPath } = require('./utils')
 
 namespace('deploy', function () {
-
   function replacer(value, variables) {
     if(!value || value == '') return value;
     const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
@@ -22,7 +20,7 @@ namespace('deploy', function () {
   const apps = {
     consoleapi: {
       cmds: [
-        `cd ${PATH_TO_SERVER}`, 
+        `cd ${serviceToPath('consoleapi')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
         'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
@@ -32,7 +30,7 @@ namespace('deploy', function () {
     },
     'web-api': {
       cmds: [
-        `cd ${PATH_TO_SERVER}`, 
+        `cd ${serviceToPath('web-api')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
         'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
@@ -42,7 +40,7 @@ namespace('deploy', function () {
     },
     worker: {
       cmds: [
-        `cd ${PATH_TO_SERVER}`, 
+        `cd ${serviceToPath('worker')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
@@ -52,7 +50,7 @@ namespace('deploy', function () {
     },
     console: {
       cmds: [
-        `cd ${PATH_TO_CONSOLE}`, 
+        `cd ${serviceToPath('console')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build={{cluster_name}}',
         'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
@@ -63,7 +61,7 @@ namespace('deploy', function () {
     },
     consumer: {
       cmds: [
-        `cd ${PATH_TO_CONSUMER}`, 
+        `cd ${serviceToPath('consumer')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         './node_modules/.bin/gulp staging-gc-build',
         'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
@@ -74,7 +72,7 @@ namespace('deploy', function () {
     },
     'shipping-api': {
       cmds: [
-        `cd ${PATH_TO_SHIPPING}`,
+        `cd ${serviceToPath('shipping-api')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-{{app_name}} -f docker/api . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
@@ -84,7 +82,7 @@ namespace('deploy', function () {
     },
     'shipping-worker': {
       cmds: [
-        `cd ${PATH_TO_SHIPPING}`,
+        `cd ${serviceToPath('shipping-worker')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
@@ -94,7 +92,7 @@ namespace('deploy', function () {
     },
     'inventory-worker': {
       cmds: [
-        `cd ${PATH_TO_INVENTORY}`,
+        `cd ${serviceToPath('inventory-worker')}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
@@ -113,7 +111,7 @@ namespace('deploy', function () {
       jake.Task['slack:deployment'].execute(cluster_name, app_name);
       complete();
     });
-    
+
   });
 
   desc('Deploy application to ECS. | [cluster_name]');
@@ -126,5 +124,4 @@ namespace('deploy', function () {
       });
     })
   });
-
 });
