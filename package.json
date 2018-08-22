@@ -9,6 +9,7 @@
     "axios": "^0.18.0",
     "dotenv": "^6.0.0",
     "dotenv-parse-variables": "^0.2.0",
+    "git-branch": "^2.0.1",
     "jake": "^8.0.16",
     "q": "^1.5.1",
     "underscore": "^1.9.1"
