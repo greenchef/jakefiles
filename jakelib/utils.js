@@ -17,7 +17,6 @@ const serviceToPath = (service_name) => {
     case 'inventory-worker':
       return PATH_TO_INVENTORY
     case 'analytics-mosql-models':
-      return PATH_TO_ANALYTICS
     case 'analytics-mosql-logevents':
       return PATH_TO_ANALYTICS
     default:
