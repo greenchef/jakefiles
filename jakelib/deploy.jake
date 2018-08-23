@@ -75,6 +75,22 @@ namespace('deploy', function () {
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
+    },
+    'analytics-mosql-logevents': {
+      cmds: [
+        'docker build -t mosql-logevents -f docker/mosql-logevents/Dockerfile . --no-cache',
+        'docker tag mosql-logevents:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker image prune -a -f'
+      ]
+    },
+    'analytics-mosql-models': {
+      cmds: [
+        'docker build -t mosql-models -f docker/mosql-models/Dockerfile . --no-cache',
+        'docker tag mosql-models:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker image prune -a -f'
+      ]
     }
   }
 
