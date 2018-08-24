@@ -1,6 +1,6 @@
 const util = require('util')
 
-const { getBranchName } = require('./utils')
+const { getBranchName, getUsername } = require('./utils')
 
 namespace('slack', function () {
 
@@ -8,7 +8,8 @@ namespace('slack', function () {
 	task('deployment', [], { async: false }, function(cluster_name, service_name) {
     const branch_name = getBranchName(service_name);
 
-    const message = `Branch ${branch_name} for ${service_name} deployed to ${cluster_name}.`
+    const username = getUsername();
+    const message = `Branch ${branch_name} for ${service_name} deployed to ${cluster_name} by ${username}.`
     const slackPostUrl = 'https://hooks.slack.com/services/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';
     let payload = {
       channel: "#releases",
@@ -23,22 +24,26 @@ namespace('slack', function () {
               {
                 title: "Service",
                 value: `${service_name}`,
-                short: true
+                short: true,
               },
               {
                 title: "Cluster",
                 value: `${cluster_name}`,
-                short: true
+                short: true,
               },
               {
                 title: "Branch",
                 value: branch_name,
-                short: true
-              }
-            ]
-
-          }
-        ]
+                short: true,
+              },
+              {
+                title: "Who",
+                value: username,
+                short: true,
+              },
+            ],
+          },
+        ],
     }
     var cmds = [ util.format("curl -X POST --data-urlencode payload='%s' %s", JSON.stringify(payload).toString(), slackPostUrl) ];
 		jake.exec(cmds, { printStdout: true });

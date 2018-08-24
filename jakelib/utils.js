@@ -1,6 +1,13 @@
 const gitBranch = require('git-branch')
 
-const { PATH_TO_SERVER, PATH_TO_CONSOLE, PATH_TO_CONSUMER, PATH_TO_SHIPPING, PATH_TO_INVENTORY } = process.env;
+const {
+  GITHUB_USERNAME,
+  PATH_TO_CONSOLE,
+  PATH_TO_CONSUMER,
+  PATH_TO_INVENTORY,
+  PATH_TO_SERVER,
+  PATH_TO_SHIPPING,
+} = process.env;
 
 const serviceToPath = (service_name) => {
   switch(service_name) {
@@ -28,5 +35,8 @@ const getBranchName = (service_name) => {
   return gitBranch.sync(path);
 }
 
-exports.serviceToPath = serviceToPath;
+const getUsername = () => GITHUB_USERNAME;
+
 exports.getBranchName = getBranchName;
+exports.getUsername = getUsername;
+exports.serviceToPath = serviceToPath;
