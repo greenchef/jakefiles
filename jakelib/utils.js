@@ -14,6 +14,7 @@ const serviceToPath = (service_name) => {
   switch(service_name) {
     case 'consoleapi':
     case 'web-api':
+    case 'worker':
       return PATH_TO_SERVER
     case 'console':
       return PATH_TO_CONSOLE

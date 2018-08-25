@@ -81,7 +81,6 @@ namespace('deploy', function () {
         'docker build -t mosql-logevents -f docker/mosql-logevents/Dockerfile . --no-cache',
         'docker tag mosql-logevents:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker image prune -a -f'
       ]
     },
     'analytics-mosql-models': {
@@ -89,7 +88,6 @@ namespace('deploy', function () {
         'docker build -t mosql-models -f docker/mosql-models/Dockerfile . --no-cache',
         'docker tag mosql-models:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker image prune -a -f'
       ]
     }
   }
@@ -106,7 +104,6 @@ namespace('deploy', function () {
       `cd ${path}`,
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
       ...apps[app_name].cmds,
-      'docker image prune -a -f',
     ];
     const vars = {cluster_name, app_name};
     const cmd = replacer(cmds.join(' && '), vars);
