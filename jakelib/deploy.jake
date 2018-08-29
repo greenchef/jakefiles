@@ -92,7 +92,6 @@ namespace('deploy', function () {
     },
     'jsreports': {
       cmds: [
-        `cd ${PATH_TO_JSREPORTS}`,
         'eval $(aws ecr get-login --no-include-email --region us-west-2)',
         'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',

@@ -8,6 +8,7 @@ const {
   PATH_TO_INVENTORY,
   PATH_TO_SERVER,
   PATH_TO_SHIPPING,
+  PATH_TO_JSREPORTS
 } = process.env;
 
 const serviceToPath = (service_name) => {
@@ -28,6 +29,8 @@ const serviceToPath = (service_name) => {
     case 'analytics-mosql-models':
     case 'analytics-mosql-logevents':
       return PATH_TO_ANALYTICS
+    case 'jsreports':
+      return PATH_TO_JSREPORTS
     default:
       return null;
   }
