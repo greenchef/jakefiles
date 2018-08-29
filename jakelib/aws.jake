@@ -1,6 +1,3 @@
-var util = require('util');
-var fs   = require('fs');
-
 namespace('aws', function () {
 	
 	desc('Prerequisite to most jake tasks.  This checks for credentials in aws-cli.');
