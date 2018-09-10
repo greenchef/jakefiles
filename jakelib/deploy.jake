@@ -27,14 +27,14 @@ namespace('deploy', function () {
     },
     'web-api': {
       cmds: [
-        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
+        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --build-arg SERVICE_NAME={{cluster_name}}-api --no-cache',
         'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
       ]
     },
     worker: {
       cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker . --build-arg SERVICE_NAME={{cluster_name}}-{{app_name}} --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
