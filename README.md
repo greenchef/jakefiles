@@ -10,7 +10,7 @@
 2. Clone repo
 3. cd to jakefiles
 4. cp the `example.env` to `.env` and add appropriate values
-4. npm i
+4. npm ci
 5. jake -T
 
 ### What am I
@@ -21,22 +21,22 @@ Feel free to make additions to this repo.
 If you are changing the namespace structure or an existing task please submit a PR.
 
 ### Example Deploy Command
-Deploy the "console" app (Console-Web) to the "staging" ECS cluster.
+Deploy the "console" app to the "staging-uat" ECS cluster.
 ```bash
-jake deploy:app['staging-gc','console']
+jake deploy:app['staging-uat','console']
 ```
 
-### To Deploy Shipping to StagingECS
+### To Deploy Shipping to Staging UAT
 1. create a staging branch
 2. merge in branch `GCT-314-get-shipping-working` (this branch is not in prod)
-3. Deploy shipping to staging ECS
+3. Deploy shipping to staging UAT
 ```bash
-jake deploy:app['staging-gc','shipping-api']
+jake deploy:app['staging-uat','shipping-api']
 ```
 
 #### ZSH Users Special Syntax
 According to the [official documentation](http://jakejs.com/docs), ZSH users may need to do one of two things to run `jake` commands:
-- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[staging-gc,console]'`
+- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[staging-uat,console]'`
 
 -- OR --
 
