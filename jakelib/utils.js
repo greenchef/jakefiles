@@ -1,4 +1,4 @@
-const gitBranch = require('git-branch')
+const simpleGit = require('simple-git/promise')
 
 const {
   GITHUB_USERNAME,
@@ -32,19 +32,20 @@ const serviceToPath = (service_name) => {
     case 'jsreports':
       return PATH_TO_JSREPORTS
     default:
-      return null;
+      throw new Error(`Unable to find path for service name: ${service_name}`);
   }
 }
 
-const getBranchName = (service_name) => {
+const getBranchOrTag = async (service_name) => {
   const path = serviceToPath(service_name);
-  if (!path) return 'unknown'
 
-  return gitBranch.sync(path);
+  // This will also return the tag if a tag is checked out instead of a branch
+  const branchData = await simpleGit(path).branchLocal();
+  return branchData.current;
 }
 
 const getUsername = () => GITHUB_USERNAME;
 
-exports.getBranchName = getBranchName;
+exports.getBranchOrTag = getBranchOrTag;
 exports.getUsername = getUsername;
 exports.serviceToPath = serviceToPath;

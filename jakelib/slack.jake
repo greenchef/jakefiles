@@ -1,12 +1,12 @@
 const util = require('util')
 
-const { getBranchName, getUsername } = require('./utils')
+const { getBranchOrTag, getUsername } = require('./utils')
 
 namespace('slack', function () {
 
   desc('Send slack deployment confirmation  | [cluster_name,service_name]');
-	task('deployment', [], { async: false }, function(cluster_name, service_name) {
-    const branch_name = getBranchName(service_name);
+	task('deployment', [], { async: true }, async function(cluster_name, service_name) {
+    const branch_name = await getBranchOrTag(service_name);
 
     const username = getUsername();
     const message = `Branch ${branch_name} for ${service_name} deployed to ${cluster_name} by ${username}.`
