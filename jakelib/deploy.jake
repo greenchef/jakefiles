@@ -20,21 +20,21 @@ namespace('deploy', function () {
   const apps = {
     consoleapi: {
       cmds: [
-        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
+        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE=consoleapi --no-cache',
         'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
       ]
     },
     'web-api': {
       cmds: [
-        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
+        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE=api --no-cache',
         'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
       ]
     },
     worker: {
       cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE={{app_name}} --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
@@ -42,7 +42,7 @@ namespace('deploy', function () {
     console: {
       cmds: [
         './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build={{cluster_name}}',
-        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE={{app_name}} --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
@@ -50,28 +50,28 @@ namespace('deploy', function () {
     consumer: {
       cmds: [
         './node_modules/.bin/gulp {{cluster_name}}-build',
-        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE={{app_name}} --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
     },
     'shipping-api': {
       cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f docker/api . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} -f docker/api . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE={{app_name}} --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
     },
     'shipping-worker': {
       cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE={{app_name}} --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
     },
     'inventory-worker': {
       cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
+        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --build-arg CLUSTER={{cluster_name}} --build-arg SERVICE={{app_name}} --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
