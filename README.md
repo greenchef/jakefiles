@@ -7,11 +7,12 @@
 
 ### Quick Start
 1. npm i -g jake 
-2. Clone repo
-3. cd to jakefiles
-4. cp the `example.env` to `.env` and add appropriate values
-4. npm ci
-5. jake -T
+1. Clone repo
+1. cd to jakefiles
+1. cp the `example.env` to `.env` and add appropriate values. Note: Paths must be absolute and
+may not use `~`. Example: `/Users/USERNAME/PATHTOREPO`
+1. npm i
+1. jake -T
 
 ### What am I
 This is a collection of tasks executed with the Jake task runner. See http://jakejs.com/
