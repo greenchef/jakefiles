@@ -69,6 +69,13 @@ namespace('deploy', function () {
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
     },
+    'shipping-scheduler': {
+      cmds: [
+        'docker build -t {{cluster_name}}-{{app_name}} -f docker/scheduler . --no-cache',
+        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+      ]
+    },
     'inventory-worker': {
       cmds: [
         'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',

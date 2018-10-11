@@ -23,6 +23,7 @@ const serviceToPath = (service_name) => {
       return PATH_TO_CONSUMER
     case 'shipping-api':
     case 'shipping-worker':
+    case 'shipping-scheduler':
       return PATH_TO_SHIPPING
     case 'inventory-worker':
       return PATH_TO_INVENTORY
