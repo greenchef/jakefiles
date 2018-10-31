@@ -3,7 +3,7 @@ var util = require('util');
 namespace('ecr', function () {
 	desc('Copy images from one cluster to another | [from_cluster, to_cluster, apps]');
 	task('copyAll', ['aws:loadCredentials'], { async: true }, function(from_cluster, to_cluster) {
-    const apps = ['api', 'console', 'consumer', 'inventory-worker', 'jsreports', 'shipping-api', 'shipping-worker', 'shipping-scheduler', 'worker'];
+    const apps = ['api', 'console', 'consumer', 'inventory-worker', 'jsreports', 'scheduler', 'shipping-api', 'shipping-worker', 'shipping-scheduler', 'worker'];
 		var config = jake.Task["aws:loadCredentials"].value
     var cmds = ['eval $(aws ecr get-login --no-include-email --region us-west-2)'];
 
