@@ -10,7 +10,7 @@ namespace('slack', function () {
 
     const username = getUsername();
     const message = `Branch ${branch_name} for ${service_name} deployed to ${cluster_name} by ${username}.`
-    const slackPostUrl = 'https://hooks.slack.com/services/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';
+    const slackPostUrl = 'https://hooks.slack.com/services/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';
     let payload = {
       channel: "#gc-releases",
       username: "Deployment Notice",
