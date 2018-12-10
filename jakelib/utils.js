@@ -4,6 +4,7 @@ const {
   GITHUB_USERNAME,
   PATH_TO_ANALYTICS,
   PATH_TO_CONSOLE,
+  PATH_TO_CONSOLE_V2,
   PATH_TO_CONSUMER,
   PATH_TO_INVENTORY,
   PATH_TO_SERVER,
@@ -20,6 +21,8 @@ const serviceToPath = (service_name) => {
       return PATH_TO_SERVER
     case 'console':
       return PATH_TO_CONSOLE
+    case 'console-v2':
+      return PATH_TO_CONSOLE_V2
     case 'consumer':
       return PATH_TO_CONSUMER
     case 'shipping-api':

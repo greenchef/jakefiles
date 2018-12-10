@@ -54,6 +54,14 @@ namespace('deploy', function () {
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
     },
+    'console-v2': {
+      cmds: [
+        'npm run build-staging-uat3',
+        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
+        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+      ]
+    },
     consumer: {
       cmds: [
         './node_modules/.bin/gulp {{cluster_name}}-build',
