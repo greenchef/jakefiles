@@ -1,4 +1,4 @@
-const { serviceToPath } = require('./utils')
+const { serviceToPath } = require('./utils');
 
 namespace('deploy', function () {
   function replacer(value, variables) {
@@ -15,7 +15,7 @@ namespace('deploy', function () {
       }
     });
     return value;
-  };
+  }
 
   const apps = {
     consoleapi: {
@@ -121,10 +121,10 @@ namespace('deploy', function () {
         'docker image prune -a -f'
       ]
     }
-  }
+  };
 
   desc('Deploy application to ECS. | [cluster_name,app_name]');
-	task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name, app_name) {
+  task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name, app_name) {
     const path = serviceToPath(app_name);
     if (!path) {
       console.error(`Unknown app/service: ${app_name}.`);
@@ -132,27 +132,62 @@ namespace('deploy', function () {
     }
 
     const cmds = [
-      `cd ${path}`,
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-      ...apps[app_name].cmds,
+      buildCmdString(path, cluster_name, app_name),
     ];
-    const vars = {cluster_name, app_name};
-    const cmd = replacer(cmds.join(' && '), vars);
-    jake.exec(cmd, { printStdout: true }, function(){
+
+    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
       jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${app_name}`);
       jake.Task['slack:deployment'].execute(cluster_name, app_name);
       complete();
     });
   });
 
+  const buildCmdString = (path, cluster_name, app_name) => {
+    const vars = { cluster_name, app_name };
+    const cmds = [
+      `cd ${path}`,
+      ...apps[app_name].cmds,
+    ];
+    return replacer(cmds.join(' && '), vars);
+  };
+
   desc('Deploy application to ECS. | [cluster_name]');
-	task('all', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+  task('all', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
     Object.keys(apps).forEach(k => {
       jake.exec(cmd, { printStdout: true }, function(){
         jake.Task['deploy:app'].execute(cluster_name, k);
-        jake.Task['slack:deployment'].execute(cluster_name, k);
-        complete();
       });
     })
+  });
+
+  desc('Deploy all API services (consoleapi, web-api, worker, scheduler) to ECS. | [cluster_name]');
+  task('apiall', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+    const keys = [
+      'consoleapi',
+      'web-api',
+      'worker',
+      'scheduler'
+    ];
+
+    const cmds = [
+      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+    ];
+
+    const path = serviceToPath(keys[0]); // all have the same path
+
+    keys.forEach(k => {
+      if(k !== 'consoleapi') { // commands for consoleapi and web-api are identical, no need to repeat
+        cmds.push(buildCmdString(path, cluster_name, k));
+      }
+    });
+
+    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
+      keys.forEach(k => {
+        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${k}`);
+        jake.Task['slack:deployment'].execute(cluster_name, k);
+      });
+      complete();
+    });
   });
 });
