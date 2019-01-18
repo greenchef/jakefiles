@@ -151,12 +151,25 @@ namespace('deploy', function () {
   };
 
   desc('Deploy application to ECS. | [cluster_name]');
+  // if any of the repos are not present in the target environment, this will fail on that step
   task('all', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+    const cmds = [
+      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+    ];
+
     Object.keys(apps).forEach(k => {
-      jake.exec(cmd, { printStdout: true }, function(){
-        jake.Task['deploy:app'].execute(cluster_name, k);
+      if(k !== 'consoleapi') { // commands for consoleapi and web-api are identical, no need to repeat
+        cmds.push(buildCmdString(serviceToPath(k), cluster_name, k));
+      }
+    });
+
+    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
+      Object.keys(apps).forEach(k => {
+        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${k}`);
+        jake.Task['slack:deployment'].execute(cluster_name, k);
       });
-    })
+      complete();
+    });
   });
 
   desc('Deploy all API services (consoleapi, web-api, worker, scheduler) to ECS. | [cluster_name]');
