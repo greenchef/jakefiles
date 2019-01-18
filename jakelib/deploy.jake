@@ -183,6 +183,12 @@ namespace('deploy', function () {
       'scheduler'
     ];
 
+    if(cluster_name.includes('staging')){
+      // scheduler is not deployed to most staging environments
+      // can be released separately if needed
+      keys.pop();
+    }
+
     const cmds = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
     ];
