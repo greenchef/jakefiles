@@ -17,6 +17,15 @@ namespace('deploy', function () {
     return value;
   }
 
+  const buildCmdString = (path, cluster_name, app_name) => {
+    const vars = { cluster_name, app_name };
+    const cmds = [
+      `cd ${path}`,
+      ...apps[app_name].cmds,
+    ];
+    return replacer(cmds.join(' && '), vars);
+  };
+
   const apps = {
     consoleapi: {
       cmds: [
@@ -142,15 +151,6 @@ namespace('deploy', function () {
       complete();
     });
   });
-
-  const buildCmdString = (path, cluster_name, app_name) => {
-    const vars = { cluster_name, app_name };
-    const cmds = [
-      `cd ${path}`,
-      ...apps[app_name].cmds,
-    ];
-    return replacer(cmds.join(' && '), vars);
-  };
 
   desc('Deploy application to ECS. | [cluster_name]');
   // if any of the repos are not present in the target environment, this will fail on that step
