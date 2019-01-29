@@ -38,15 +38,20 @@ Deploy the "console" app to the "staging-uat" ECS cluster.
 jake deploy:app['staging-uat','console']
 ```
 
-#### Deploying All API Services Together
+#### Deploying Groups of Services with One Command
 Instead of deploying `consoleapi`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
 with the desired cluster name:
 ```bash
-jake deploy:apiall['staging-uat']
+jake deploy:core['staging-uat']
 ```
-`scheduler` will be excluded automatically from deployments to clusters with 'staging' in their names. However, if
-`scheduler` is needed in a staging environment, it can be released individually using the `deploy:app` syntax in the
-previous example.
+When using this command, note that `scheduler` will be excluded automatically from deployments to clusters with
+'staging' in their names. However, if `scheduler` is needed in a staging environment, it can be released individually
+using the `deploy:app` syntax in the previous example.
+
+To deploy all shipping services, you can use the following with the desired cluster name:
+```bash
+jake deploy:shipping['staging-uat']
+```
 
 ### ZSH Users Special Syntax
 According to the [official documentation](http://jakejs.com/docs), ZSH users may need to do one of two things to run `jake` commands:

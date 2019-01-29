@@ -172,13 +172,13 @@ namespace('deploy', function () {
     });
   });
 
-  desc('Deploy all API services (consoleapi, web-api, worker, scheduler) to ECS. | [cluster_name]');
-  task('apiall', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+  desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [cluster_name]');
+  task('core', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
     const keys = [
       'consoleapi',
       'web-api',
       'worker',
-      'scheduler'
+      'scheduler',
     ];
 
     if(cluster_name.includes('staging')){
@@ -197,6 +197,33 @@ namespace('deploy', function () {
       if(k !== 'consoleapi') { // commands for consoleapi and web-api are identical, no need to repeat
         cmds.push(buildCmdString(path, cluster_name, k));
       }
+    });
+
+    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
+      keys.forEach(k => {
+        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${k}`);
+        jake.Task['slack:deployment'].execute(cluster_name, k);
+      });
+      complete();
+    });
+  });
+
+  desc('Deploy all shipping services (shipping-api, shipping-worker, shipping-scheduler) to ECS. | [cluster_name]');
+  task('shipping', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+    const keys = [
+      'shipping-api',
+      'shipping-worker',
+      'shipping-scheduler',
+    ];
+
+    const cmds = [
+      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+    ];
+
+    const path = serviceToPath(keys[0]); // all have the same path
+
+    keys.forEach(k => {
+      cmds.push(buildCmdString(path, cluster_name, k));
     });
 
     jake.exec(cmds.join(' && '), { printStdout: true }, function(){
