@@ -27,34 +27,6 @@ namespace('deploy', function () {
   };
 
   const apps = {
-    consoleapi: {
-      cmds: [
-        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
-        'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
-      ]
-    },
-    'web-api': {
-      cmds: [
-        'docker build -t {{cluster_name}}-api -f Dockerfile-api . --no-cache',
-        'docker tag {{cluster_name}}-api:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-api:latest',
-      ]
-    },
-    worker: {
-      cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-worker . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    scheduler: {
-      cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile-scheduler . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
     console: {
       cmds: [
         './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build={{cluster_name}}',
@@ -75,27 +47,6 @@ namespace('deploy', function () {
       cmds: [
         './node_modules/.bin/gulp {{cluster_name}}-build',
         'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'shipping-api': {
-      cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f docker/api . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'shipping-worker': {
-      cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'shipping-scheduler': {
-      cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f docker/scheduler . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
@@ -174,35 +125,27 @@ namespace('deploy', function () {
 
   desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [cluster_name]');
   task('core', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
-    const keys = [
+    const services = [
       'consoleapi',
       'web-api',
       'worker',
       'scheduler',
     ];
 
-    if(cluster_name.includes('staging')){
-      // scheduler is not deployed to most staging environments
-      // can be released separately if needed
-      keys.pop();
-    }
-
-    const cmds = [
+    const cmdsTemplate = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+      `cd ${process.env.PATH_TO_SERVER}`,
+      'docker build -t {{cluster_name}}-core-root -f docker/root . --no-cache',
+      'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+      'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
     ];
 
-    const path = serviceToPath(keys[0]); // all have the same path
+    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })
 
-    keys.forEach(k => {
-      if(k !== 'consoleapi') { // commands for consoleapi and web-api are identical, no need to repeat
-        cmds.push(buildCmdString(path, cluster_name, k));
-      }
-    });
-
-    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
-      keys.forEach(k => {
-        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${k}`);
-        jake.Task['slack:deployment'].execute(cluster_name, k);
+    jake.exec(cmds, { printStdout: true }, function(){
+      keys.forEach(service => {
+        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${service}`);
+        jake.Task['slack:deployment'].execute(cluster_name, service);
       });
       complete();
     });
@@ -210,26 +153,27 @@ namespace('deploy', function () {
 
   desc('Deploy all shipping services (shipping-api, shipping-worker, shipping-scheduler) to ECS. | [cluster_name]');
   task('shipping', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
-    const keys = [
+   
+    const services = [
       'shipping-api',
       'shipping-worker',
       'shipping-scheduler',
     ];
 
-    const cmds = [
+    const cmdsTemplate = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+      `cd ${process.env.PATH_TO_SHIPPING}`,
+      'docker build -t {{cluster_name}}-shipping-root -f docker/root . --no-cache',
+      'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+      'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
     ];
 
-    const path = serviceToPath(keys[0]); // all have the same path
+    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })
 
-    keys.forEach(k => {
-      cmds.push(buildCmdString(path, cluster_name, k));
-    });
-
-    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
-      keys.forEach(k => {
-        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${k}`);
-        jake.Task['slack:deployment'].execute(cluster_name, k);
+    jake.exec(cmds, { printStdout: true }, function(){
+      services.forEach(service => {
+        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${service}`);
+        jake.Task['slack:deployment'].execute(cluster_name, service);
       });
       complete();
     });
