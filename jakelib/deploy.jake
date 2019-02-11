@@ -27,6 +27,55 @@ namespace('deploy', function () {
   };
 
   const apps = {
+    consoleapi: {
+      cmds: [
+        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
+        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+      ]
+    },
+    'web-api': {
+      cmds: [
+        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
+        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+      ]
+    },
+    worker: {
+      cmds: [
+        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
+        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+      ]
+    },
+    scheduler: {
+      cmds: [
+        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
+        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+      ]
+    },
+    'shipping-api': {
+      cmds: [
+        'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
+        'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+      ]
+    },
+    'shipping-worker': {
+      cmds: [
+        'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
+        'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+      ]
+    },
+    'shipping-scheduler': {
+      cmds: [
+        'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
+        'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+      ]
+    },
     console: {
       cmds: [
         './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build={{cluster_name}}',
