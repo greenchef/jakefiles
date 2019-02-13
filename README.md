@@ -44,9 +44,6 @@ with the desired cluster name:
 ```bash
 jake deploy:core['staging-uat']
 ```
-When using this command, note that `scheduler` will be excluded automatically from deployments to clusters with
-'staging' in their names. However, if `scheduler` is needed in a staging environment, it can be released individually
-using the `deploy:app` syntax in the previous example.
 
 To deploy all shipping services, you can use the following with the desired cluster name:
 ```bash
