@@ -1,22 +1,7 @@
-const { serviceToPath } = require('./utils');
+const { serviceToPath, replacer } = require('./utils');
 
 namespace('deploy', function () {
-  function replacer(value, variables) {
-    if(!value || value == '') return value;
-    const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
-    value.match(var_pattern).forEach(function(matched_var) {
-      var idx, value_for_replace;
-      idx = value.indexOf(matched_var);
-      if (idx > -1) {
-        value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
-        if (value_for_replace != null) {
-          value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
-        }
-      }
-    });
-    return value;
-  }
-
+  
   const rollbackSetupCmds = [
     'MANIFEST=$(aws ecr batch-get-image --repository-name {{repo_name}} --image-ids imageTag=latest --query "images[].imageManifest" --output text)',
     'aws ecr put-image --repository-name {{repo_name}} --image-tag previous --image-manifest "$MANIFEST"',

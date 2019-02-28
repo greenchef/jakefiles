@@ -51,6 +51,23 @@ const getBranchOrTag = async (service_name) => {
 
 const getUsername = () => GITHUB_USERNAME;
 
+function replacer(value, variables) {
+  if(!value || value == '') return value;
+  const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
+  value.match(var_pattern).forEach(function(matched_var) {
+    var idx, value_for_replace;
+    idx = value.indexOf(matched_var);
+    if (idx > -1) {
+      value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
+      if (value_for_replace != null) {
+        value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
+      }
+    }
+  });
+  return value;
+}
+
 exports.getBranchOrTag = getBranchOrTag;
 exports.getUsername = getUsername;
 exports.serviceToPath = serviceToPath;
+exports.replacer = replacer;
