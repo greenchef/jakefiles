@@ -1,18 +1,26 @@
-const { serviceToPath, replacer } = require('./utils');
+const { serviceToPath } = require('./utils');
 
 namespace('deploy', function () {
-  
-  const rollbackSetupCmds = [
-    'MANIFEST=$(aws ecr batch-get-image --repository-name {{repo_name}} --image-ids imageTag=latest --query "images[].imageManifest" --output text)',
-    'aws ecr put-image --repository-name {{repo_name}} --image-tag previous --image-manifest "$MANIFEST"',
-    'aws ecr batch-delete-image --repository-name {{repo_name}} --image-ids imageTag=latest'
-  ];
+  function replacer(value, variables) {
+    if(!value || value == '') return value;
+    const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
+    value.match(var_pattern).forEach(function(matched_var) {
+      var idx, value_for_replace;
+      idx = value.indexOf(matched_var);
+      if (idx > -1) {
+        value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
+        if (value_for_replace != null) {
+          value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
+        }
+      }
+    });
+    return value;
+  }
 
   const buildCmdString = (path, cluster_name, app_name) => {
-    const vars = { cluster_name, app_name, repo_name: cluster_name + '-' + app_name };
+    const vars = { cluster_name, app_name };
     const cmds = [
       `cd ${path}`,
-      ...rollbackSetupCmds,
       ...apps[app_name].cmds,
     ];
     return replacer(cmds.join(' && '), vars);
@@ -177,12 +185,11 @@ namespace('deploy', function () {
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
       `cd ${process.env.PATH_TO_SERVER}`,
       'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
-      ...rollbackSetupCmds,
       'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
       'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
     ];
 
-    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name, repo_name: cluster_name + '-core-root' })
+    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })
 
     jake.exec(cmds, { printStdout: true }, function(){
       services.forEach(service => {
@@ -206,12 +213,11 @@ namespace('deploy', function () {
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
       `cd ${process.env.PATH_TO_SHIPPING}`,
       'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
-      ...rollbackSetupCmds,
       'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
       'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
     ];
 
-    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name, repo_name: cluster_name + '-shipping-root' })
+    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })
 
     jake.exec(cmds, { printStdout: true }, function(){
       services.forEach(service => {
