@@ -109,6 +109,7 @@ namespace('deploy', function () {
     },
     'analytics-mosql-logevents': {
       cmds: [
+        'docker build -t greenchef/mosql-base -f ./docker/mosql-base/Dockerfile . --no-cache',
         'docker build -t mosql-logevents -f docker/mosql-logevents/Dockerfile . --no-cache',
         'docker tag mosql-logevents:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
@@ -116,6 +117,7 @@ namespace('deploy', function () {
     },
     'analytics-mosql-models': {
       cmds: [
+        'docker build -t greenchef/mosql-base -f ./docker/mosql-base/Dockerfile . --no-cache',
         'docker build -t mosql-models -f docker/mosql-models/Dockerfile . --no-cache',
         'docker tag mosql-models:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
