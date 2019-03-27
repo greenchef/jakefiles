@@ -94,7 +94,7 @@ namespace('deploy', function () {
     },
     consumer: {
       cmds: [
-        './node_modules/.bin/gulp {{cluster_name}}-build',
+        './node_modules/.bin/gulp {{cluster_name}}-dist',
         'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
@@ -204,7 +204,7 @@ namespace('deploy', function () {
 
   desc('Deploy all shipping services (shipping-api, shipping-worker, shipping-scheduler) to ECS. | [cluster_name]');
   task('shipping', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
-   
+
     const services = [
       'shipping-api',
       'shipping-worker',
