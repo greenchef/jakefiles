@@ -1,6 +1,8 @@
-const util = require('util')
+const util = require('util');
 
-const { getBranchOrTag, getUsername } = require('./utils')
+const { getBranchOrTag, getUsername } = require('./utils');
+const prodSlackPostUrl = 'https://hooks.slack.com/services/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';
+const stagingSlackPostUrl = 'https://hooks.slack.com/services/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';
 
 namespace('slack', function () {
 
@@ -9,10 +11,9 @@ namespace('slack', function () {
     const branch_name = await getBranchOrTag(service_name);
 
     const username = getUsername();
-    const message = `Branch ${branch_name} for ${service_name} deployed to ${cluster_name} by ${username}.`
-    const slackPostUrl = 'https://hooks.slack.com/services/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';
+    const message = `Branch ${branch_name} for ${service_name} deployed to ${cluster_name} by ${username}.`;
+    const slackPostUrl = cluster_name.startsWith('production') ? prodSlackPostUrl : stagingSlackPostUrl;
     let payload = {
-      channel: "#gc-releases",
       username: "Deployment Notice",
       icon_emoji: ":rocket:",
       attachments:[
