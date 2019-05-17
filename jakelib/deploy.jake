@@ -123,6 +123,14 @@ namespace('deploy', function () {
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
     },
+    'analytics-mosql-shipping': {
+      cmds: [
+        'docker build -t greenchef/mosql-base -f ./docker/mosql-base/Dockerfile . --no-cache',
+        'docker build -t mosql-shipping -f docker/mosql-shipping/Dockerfile . --no-cache',
+        'docker tag mosql-shipping:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+      ]
+    },
     'jsreports': {
       cmds: [
         'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile . --no-cache',
