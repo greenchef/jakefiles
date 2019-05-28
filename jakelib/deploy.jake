@@ -92,14 +92,6 @@ namespace('deploy', function () {
         'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
       ]
     },
-    consumer: {
-      cmds: [
-        './node_modules/.bin/gulp {{cluster_name}}-dist',
-        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
     'inventory-worker': {
       cmds: [
         'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
@@ -181,6 +173,32 @@ namespace('deploy', function () {
       complete();
     });
   });
+
+  desc('Deploy consumer | [cluster_name]');
+  task('consumer', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+    const clusterMap = {
+      'production-lv': 'releaseProd',
+      'staging-core': 'releaseStagingCore',
+      'staging-grow': 'releaseStagingGrow',
+      'staging-pp': 'releasePreProd',
+      'staging-uat': 'releaseStagingUat',
+      'staging-uat3': 'releaseStagingUat3',
+    };
+    const buildArg = clusterMap[cluster_name];
+    const dockerfile = ['production-lv', 'staging-pp'].includes(cluster_name) ? 'cdn' : 'non-cdn';
+    const cmds = [
+      `cd ${process.env.PATH_TO_CONSUMER}`,
+      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+      `docker build -t ${cluster_name}-consumer . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --no-cache`,
+      `docker tag ${cluster_name}-consumer:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/${cluster_name}-consumer:latest`,
+      `docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/${cluster_name}-consumer:latest`,
+    ];
+    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
+      jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-consumer`);
+      jake.Task['slack:deployment'].execute(cluster_name, 'consumer');
+      complete();
+    });
+  })
 
   desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [cluster_name]');
   task('core', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
