@@ -78,10 +78,11 @@ namespace('deploy', function () {
     },
     console: {
       cmds: [
-        './node_modules/.bin/gulp docker:build --gulpfile ./gulpfile.babel.js --build={{cluster_name}}',
+        './node_modules/.bin/gulp buildDocker --env={{cluster_name}}',
         'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
         'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
+        './node_modules/.bin/gulp build --env=dev',
+        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest'
       ]
     },
     'console-v2': {
