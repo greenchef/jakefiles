@@ -38,6 +38,12 @@ Deploy the "console" app to the "staging-uat" ECS cluster.
 jake deploy:app['staging-uat','console']
 ```
 
+#### Consumer App Deployment
+To deploy the consumer app, use the following with the desired cluster name:
+```bash
+jake deploy:consumer['staging-uat']
+```
+
 #### Deploying Groups of Services with One Command
 Instead of deploying `consoleapi`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
 with the desired cluster name:
