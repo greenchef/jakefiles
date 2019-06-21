@@ -1,4 +1,4 @@
-const { serviceToPath } = require('./utils');
+const { getBranchOrTag, serviceToPath } = require('./utils');
 
 namespace('deploy', function () {
   function replacer(value, variables) {
@@ -176,7 +176,7 @@ namespace('deploy', function () {
   });
 
   desc('Deploy consumer | [cluster_name]');
-  task('consumer', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+  task('consumer', ['aws:loadCredentials'], { async: true }, async function(cluster_name) {
     const clusterMap = {
       'production-lv': 'releaseProd',
       'staging-core': 'releaseStagingCore',
@@ -185,12 +185,13 @@ namespace('deploy', function () {
       'staging-uat': 'releaseStagingUat',
       'staging-uat3': 'releaseStagingUat3',
     };
+    const branch = await getBranchOrTag('consumer');
     const buildArg = clusterMap[cluster_name];
     const dockerfile = ['production-lv', 'staging-pp'].includes(cluster_name) ? 'cdn' : 'non-cdn';
     const cmds = [
       `cd ${process.env.PATH_TO_CONSUMER}`,
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-      `docker build -t ${cluster_name}-consumer . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --no-cache`,
+      `docker build -t ${cluster_name}-consumer . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --build-arg BRANCH=${branch} --no-cache`,
       `docker tag ${cluster_name}-consumer:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/${cluster_name}-consumer:latest`,
       `docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/${cluster_name}-consumer:latest`,
     ];
