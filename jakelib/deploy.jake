@@ -3,14 +3,13 @@ const { getBranchOrTag, serviceToPath } = require('./utils');
 const ECR_URL = '052248958630.dkr.ecr.us-west-2.amazonaws.com';
 
 const replacer = (value, variables) => {
-  if(!value || value == '') return value;
+  if(!value) return value;
 
   const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
-  value.match(var_pattern).forEach(function(matched_var) {
-    var idx, value_for_replace;
-    idx = value.indexOf(matched_var);
+  value.match(var_pattern).forEach(matched_var => {
+    const idx = value.indexOf(matched_var);
     if (idx > -1) {
-      value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
+      const value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
       if (value_for_replace != null) {
         value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
       }
@@ -20,15 +19,14 @@ const replacer = (value, variables) => {
 }
 
 const buildCmdString = (path, cluster_name, app_name) => {
-  const vars = { cluster_name, app_name };
   const cmds = [
     `cd ${path}`,
     ...apps[app_name].cmds,
   ];
-  return replacer(cmds.join(' && '), vars);
+  return replacer(cmds.join(' && '), { cluster_name, app_name });
 };
 
-const normalAppDeployCommands = [
+const normalDeployCommands = [
   'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
   `docker tag {{cluster_name}}-{{app_name}}:latest ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
   `docker push ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
@@ -71,14 +69,14 @@ const apps = {
   console: {
     cmds: [
       './node_modules/.bin/gulp buildDocker --env={{cluster_name}}',
-      ...normalAppDeployCommands,
+      ...normalDeployCommands,
       './node_modules/.bin/gulp build --env=dev',
     ]
   },
   'console-v2': {
     cmds: [
       'npm run build-{{cluster_name}}',
-      ...normalAppDeployCommands,
+      ...normalDeployCommands,
     ]
   },
 
@@ -95,8 +93,8 @@ const apps = {
       `docker push ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
     ]
   },
-  'jsreports': { cmds: normalAppDeployCommands },
-  'bifrost': { cmds: normalAppDeployCommands }
+  'jsreports': { cmds: normalDeployCommands },
+  'bifrost': { cmds: normalDeployCommands }
 };
 
 namespace('deploy', function () {
@@ -121,22 +119,21 @@ namespace('deploy', function () {
   });
 
   desc('Deploy application to ECS. | [cluster_name]');
-  // if any of the repos are not present in the target environment, this will fail on that step
   task('all', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
     const cmds = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
     ];
 
-    Object.keys(apps).forEach(k => {
-      if(k !== 'consoleapi') { // commands for consoleapi and web-api are identical, no need to repeat
-        cmds.push(buildCmdString(serviceToPath(k), cluster_name, k));
+    Object.keys(apps).forEach(appName => {
+      if(appName !== 'consoleapi') { // commands for consoleapi and web-api are identical, no need to repeat
+        cmds.push(buildCmdString(serviceToPath(appName), cluster_name, appName));
       }
     });
 
     jake.exec(cmds.join(' && '), { printStdout: true }, function(){
-      Object.keys(apps).forEach(k => {
-        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${k}`);
-        jake.Task['slack:deployment'].execute(cluster_name, k);
+      Object.keys(apps).forEach(appName => {
+        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${appName}`);
+        jake.Task['slack:deployment'].execute(cluster_name, appName);
       });
       complete();
     });
