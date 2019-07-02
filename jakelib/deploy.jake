@@ -1,138 +1,105 @@
 const { getBranchOrTag, serviceToPath } = require('./utils');
 
-namespace('deploy', function () {
-  function replacer(value, variables) {
-    if(!value || value == '') return value;
-    const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
-    value.match(var_pattern).forEach(function(matched_var) {
-      var idx, value_for_replace;
-      idx = value.indexOf(matched_var);
-      if (idx > -1) {
-        value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
-        if (value_for_replace != null) {
-          value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
-        }
+const ECR_URL = '052248958630.dkr.ecr.us-west-2.amazonaws.com';
+
+const replacer = (value, variables) => {
+  if(!value || value == '') return value;
+
+  const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
+  value.match(var_pattern).forEach(function(matched_var) {
+    var idx, value_for_replace;
+    idx = value.indexOf(matched_var);
+    if (idx > -1) {
+      value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
+      if (value_for_replace != null) {
+        value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
       }
-    });
-    return value;
-  }
-
-  const buildCmdString = (path, cluster_name, app_name) => {
-    const vars = { cluster_name, app_name };
-    const cmds = [
-      `cd ${path}`,
-      ...apps[app_name].cmds,
-    ];
-    return replacer(cmds.join(' && '), vars);
-  };
-
-  const apps = {
-    consoleapi: {
-      cmds: [
-        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-      ]
-    },
-    'web-api': {
-      cmds: [
-        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-      ]
-    },
-    worker: {
-      cmds: [
-        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-      ]
-    },
-    scheduler: {
-      cmds: [
-        'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-      ]
-    },
-    'shipping-api': {
-      cmds: [
-        'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
-      ]
-    },
-    'shipping-worker': {
-      cmds: [
-        'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
-      ]
-    },
-    'shipping-scheduler': {
-      cmds: [
-        'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
-      ]
-    },
-    console: {
-      cmds: [
-        './node_modules/.bin/gulp buildDocker --env={{cluster_name}}',
-        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        './node_modules/.bin/gulp build --env=dev',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest'
-      ]
-    },
-    'console-v2': {
-      cmds: [
-        'npm run build-{{cluster_name}}',
-        'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'inventory-worker': {
-      cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'analytics-mosql-logevents': {
-      cmds: [
-        'docker build -t greenchef/mosql-base -f ./docker/mosql-base/Dockerfile . --no-cache',
-        'docker build -t mosql-logevents -f docker/mosql-logevents/Dockerfile . --no-cache',
-        'docker tag mosql-logevents:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'analytics-mosql-models': {
-      cmds: [
-        'docker build -t greenchef/mosql-base -f ./docker/mosql-base/Dockerfile . --no-cache',
-        'docker build -t mosql-models -f docker/mosql-models/Dockerfile . --no-cache',
-        'docker tag mosql-models:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'analytics-mosql-shipping': {
-      cmds: [
-        'docker build -t greenchef/mosql-base -f ./docker/mosql-base/Dockerfile . --no-cache',
-        'docker build -t mosql-shipping -f docker/mosql-shipping/Dockerfile . --no-cache',
-        'docker tag mosql-shipping:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
-    },
-    'jsreports': {
-      cmds: [
-        'docker build -t {{cluster_name}}-{{app_name}} -f Dockerfile . --no-cache',
-        'docker tag {{cluster_name}}-{{app_name}}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-        'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-{{app_name}}:latest',
-      ]
     }
-  };
+  });
+  return value;
+}
 
+const buildCmdString = (path, cluster_name, app_name) => {
+  const vars = { cluster_name, app_name };
+  const cmds = [
+    `cd ${path}`,
+    ...apps[app_name].cmds,
+  ];
+  return replacer(cmds.join(' && '), vars);
+};
+
+const normalAppDeployCommands = [
+  'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
+  `docker tag {{cluster_name}}-{{app_name}}:latest ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
+  `docker push ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
+]
+
+const coreRootCommands = [
+  'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
+  `docker tag {{cluster_name}}-core-root:latest ${ECR_URL}/{{cluster_name}}-core-root:latest`,
+  `docker push ${ECR_URL}/{{cluster_name}}-core-root:latest`,
+]
+
+const shippingRootCommands = [
+  'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
+  `docker tag {{cluster_name}}-shipping-root:latest ${ECR_URL}/{{cluster_name}}-shipping-root:latest`,
+  `docker push ${ECR_URL}/{{cluster_name}}-shipping-root:latest`,
+]
+
+const getAnalyticsCommands = (subName) => {
+  return [
+    'docker build -t greenchef/mosql-base -f ./docker/mosql-base/Dockerfile . --no-cache',
+    `docker build -t ${subName} -f docker/${subName}/Dockerfile . --no-cache`,
+    `docker tag ${subName}:latest ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
+    `docker push ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
+  ]
+}
+
+const apps = {
+  // CORE API
+  consoleapi: { cmds: coreRootCommands },
+  scheduler: { cmds: coreRootCommands },
+  'web-api': { cmds: coreRootCommands },
+  worker: { cmds: coreRootCommands },
+
+  // SHIPPING
+  'shipping-api': { cmds: shippingRootCommands },
+  'shipping-scheduler': { cmds: shippingRootCommands },
+  'shipping-worker': { cmds: shippingRootCommands },
+
+  // FRONT-ENDS
+  console: {
+    cmds: [
+      './node_modules/.bin/gulp buildDocker --env={{cluster_name}}',
+      ...normalAppDeployCommands,
+      './node_modules/.bin/gulp build --env=dev',
+    ]
+  },
+  'console-v2': {
+    cmds: [
+      'npm run build-{{cluster_name}}',
+      ...normalAppDeployCommands,
+    ]
+  },
+
+  // ANALYTICS
+  'analytics-mosql-logevents': { cmds: getAnalyticsCommands('mosql-logevents') },
+  'analytics-mosql-models': { cmds: getAnalyticsCommands('mosql-models') },
+  'analytics-mosql-shipping': { cmds: getAnalyticsCommands('mosql-shipping') },
+
+  // MISCELLANEOUS
+  'inventory-worker': {
+    cmds: [
+      'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
+      `docker tag {{cluster_name}}-{{app_name}}:latest ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
+      `docker push ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
+    ]
+  },
+  'jsreports': { cmds: normalAppDeployCommands },
+  'bifrost': { cmds: normalAppDeployCommands }
+};
+
+namespace('deploy', function () {
   desc('Deploy application to ECS. | [cluster_name,app_name]');
   task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name, app_name) {
     const path = serviceToPath(app_name);
@@ -192,8 +159,8 @@ namespace('deploy', function () {
       `cd ${process.env.PATH_TO_CONSUMER}`,
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
       `docker build -t ${cluster_name}-consumer . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --build-arg BRANCH=${branch} --no-cache`,
-      `docker tag ${cluster_name}-consumer:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/${cluster_name}-consumer:latest`,
-      `docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/${cluster_name}-consumer:latest`,
+      `docker tag ${cluster_name}-consumer:latest ${ECR_URL}/${cluster_name}-consumer:latest`,
+      `docker push ${ECR_URL}/${cluster_name}-consumer:latest`,
     ];
     jake.exec(cmds.join(' && '), { printStdout: true }, function(){
       jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-consumer`);
@@ -206,17 +173,15 @@ namespace('deploy', function () {
   task('core', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
     const services = [
       'consoleapi',
+      'scheduler',
       'web-api',
       'worker',
-      'scheduler',
     ];
 
     const cmdsTemplate = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
       `cd ${process.env.PATH_TO_SERVER}`,
-      'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
-      'docker tag {{cluster_name}}-core-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
-      'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-core-root:latest',
+      ...coreRootCommands,
     ];
 
     const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })
@@ -232,19 +197,16 @@ namespace('deploy', function () {
 
   desc('Deploy all shipping services (shipping-api, shipping-worker, shipping-scheduler) to ECS. | [cluster_name]');
   task('shipping', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
-
     const services = [
       'shipping-api',
-      'shipping-worker',
       'shipping-scheduler',
+      'shipping-worker',
     ];
 
     const cmdsTemplate = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
       `cd ${process.env.PATH_TO_SHIPPING}`,
-      'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
-      'docker tag {{cluster_name}}-shipping-root:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
-      'docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/{{cluster_name}}-shipping-root:latest',
+      ...shippingRootCommands,
     ];
 
     const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })

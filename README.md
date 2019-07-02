@@ -1,28 +1,22 @@
 ## Jake Files
+This is a collection of tasks executed with the Jake task runner. See http://jakejs.com/
 
 ### Prerequisites
 1. aws-cli installed and configured
-2. docker installed, docker hub account, logged into docker
+2. docker installed
 3. Correct node installed (`cat .nvmrc`, then use `nvm` to install/use that version)
 
 ### Quick Start
-1. npm i -g jake 
-1. Clone repo
-1. cd to jakefiles
-1. cp the `example.env` to `.env` and add appropriate values. Note: Paths must be absolute and
+1. npm i -g jake
+2. Clone repo
+3. cd to jakefiles
+4. npm i
+5. cp the `example.env` to `.env` and add appropriate values. Note: Paths must be absolute and
 may not use `~`. Example: `/Users/USERNAME/PATHTOREPO`
-1. npm i
-1. jake -T
-
-### What am I
-This is a collection of tasks executed with the Jake task runner. See http://jakejs.com/
-
-### Contribute
-Feel free to make additions to this repo.  
-If you are changing the namespace structure or an existing task please submit a PR.
+6. jake -T
 
 ### How to Deploy to Staging or Production
-Make sure your .env file is up to date 
+Make sure your .env file is up to date
 (Example: `PATH_TO_CONSOLE=/Users/bgreene/GreenChef/console-web/`)
 
 1. Navigate to the folder you want to deploy. (Example: `greenchef/services/server-greenchef`)
@@ -44,7 +38,9 @@ To deploy the consumer app, use the following with the desired cluster name:
 jake deploy:consumer['staging-uat']
 ```
 
-#### Deploying Groups of Services with One Command
+### Deploying Groups of Services with One Command
+
+#### Core
 Instead of deploying `consoleapi`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
 with the desired cluster name:
 ```bash
@@ -54,6 +50,7 @@ When using this command, note that `scheduler` will be excluded automatically fr
 'staging' in their names. However, if `scheduler` is needed in a staging environment, it can be released individually
 using the `deploy:app` syntax in the previous example.
 
+#### Shipping
 To deploy all shipping services, you can use the following with the desired cluster name:
 ```bash
 jake deploy:shipping['staging-uat']
