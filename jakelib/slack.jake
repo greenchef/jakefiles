@@ -1,8 +1,8 @@
 const util = require('util');
 
 const { getBranchOrTag, getUsername } = require('./utils');
-const prodSlackPostUrl = 'https://hooks.slack.com/services/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';
-const stagingSlackPostUrl = 'https://hooks.slack.com/services/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';
+const prodSlackPostUrl = process.env.PROD_RELEASE_SLACK_URL;
+const stagingSlackPostUrl = process.env.STAGING_RELEASE_SLACK_URL
 
 namespace('slack', function () {
 
