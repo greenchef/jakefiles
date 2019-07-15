@@ -6,7 +6,7 @@ const replacer = (value, variables) => {
   if(!value) return value;
 
   const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
-  value.match(var_pattern).forEach(matched_var => {
+  (value.match(var_pattern) || []).forEach(matched_var => {
     const idx = value.indexOf(matched_var);
     if (idx > -1) {
       const value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
@@ -18,30 +18,37 @@ const replacer = (value, variables) => {
   return value;
 }
 
-const buildCmdString = (path, cluster_name, app_name) => {
+const buildCmdString = (path, environment, stack, app_name) => {
   const cmds = [
     `cd ${path}`,
     ...apps[app_name].cmds,
   ];
-  return replacer(cmds.join(' && '), { cluster_name, app_name });
+  const cluster_name = `${environment}-${stack}`;
+  return replacer(cmds.join(' && '), { cluster_name, environment, stack, app_name });
 };
 
 const normalDeployCommands = [
-  'docker build -t {{cluster_name}}-{{app_name}} . --no-cache',
-  `docker tag {{cluster_name}}-{{app_name}}:latest ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
-  `docker push ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
+  'docker build -t {{stack}}-{{app_name}} . --no-cache',
+  `docker tag {{stack}}-{{app_name}}:latest ${ECR_URL}/{{stack}}-{{app_name}}:latest`,
+  `docker push ${ECR_URL}/{{stack}}-{{app_name}}:latest`,
+]
+
+const authRootCommands = [
+  'docker build -t {{stack}}-auth-root -f ./Dockerfile . --no-cache',
+  `docker tag {{stack}}-auth-root:latest ${ECR_URL}/{{stack}}-auth-root:latest`,
+  `docker push ${ECR_URL}/{{stack}}-auth-root:latest`,
 ]
 
 const coreRootCommands = [
-  'docker build -t {{cluster_name}}-core-root -f ./Dockerfile . --no-cache',
-  `docker tag {{cluster_name}}-core-root:latest ${ECR_URL}/{{cluster_name}}-core-root:latest`,
-  `docker push ${ECR_URL}/{{cluster_name}}-core-root:latest`,
+  'docker build -t {{stack}}-core-root -f ./Dockerfile . --no-cache',
+  `docker tag {{stack}}-core-root:latest ${ECR_URL}/{{stack}}-core-root:latest`,
+  `docker push ${ECR_URL}/{{stack}}-core-root:latest`,
 ]
 
 const shippingRootCommands = [
-  'docker build -t {{cluster_name}}-shipping-root -f ./Dockerfile . --no-cache',
-  `docker tag {{cluster_name}}-shipping-root:latest ${ECR_URL}/{{cluster_name}}-shipping-root:latest`,
-  `docker push ${ECR_URL}/{{cluster_name}}-shipping-root:latest`,
+  'docker build -t {{stack}}-shipping-root -f ./Dockerfile . --no-cache',
+  `docker tag {{stack}}-shipping-root:latest ${ECR_URL}/{{stack}}-shipping-root:latest`,
+  `docker push ${ECR_URL}/{{stack}}-shipping-root:latest`,
 ]
 
 const getAnalyticsCommands = (subName) => {
@@ -55,7 +62,7 @@ const getAnalyticsCommands = (subName) => {
 
 const apps = {
   // CORE API
-  consoleapi: { cmds: coreRootCommands },
+  'consoleapi': { cmds: coreRootCommands },
   scheduler: { cmds: coreRootCommands },
   'web-api': { cmds: coreRootCommands },
   worker: { cmds: coreRootCommands },
@@ -86,20 +93,15 @@ const apps = {
   'analytics-mosql-shipping': { cmds: getAnalyticsCommands('mosql-shipping') },
 
   // MISCELLANEOUS
-  'inventory-worker': {
-    cmds: [
-      'docker build -t {{cluster_name}}-{{app_name}} -f docker/worker . --no-cache',
-      `docker tag {{cluster_name}}-{{app_name}}:latest ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
-      `docker push ${ECR_URL}/{{cluster_name}}-{{app_name}}:latest`,
-    ]
-  },
+  'inventory-worker': { cmds: normalDeployCommands },
   'jsreports': { cmds: normalDeployCommands },
-  'bifrost': { cmds: normalDeployCommands }
+  'bifrost': { cmds: normalDeployCommands },
+  'auth-api': { cmds: authRootCommands }
 };
 
 namespace('deploy', function () {
-  desc('Deploy application to ECS. | [cluster_name,app_name]');
-  task('app', ['aws:loadCredentials'], { async: false }, function(cluster_name, app_name) {
+  desc('Deploy application to ECS. | [environment, stack, app_name]');
+  task('app', ['aws:loadCredentials'], { async: false }, function(environment, stack, app_name) {
     const path = serviceToPath(app_name);
     if (!path) {
       console.error(`Unknown app/service: ${app_name}.`);
@@ -108,10 +110,11 @@ namespace('deploy', function () {
 
     const cmds = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-      buildCmdString(path, cluster_name, app_name),
+      buildCmdString(path, environment, stack, app_name),
     ];
 
     jake.exec(cmds.join(' && '), { printStdout: true }, function(){
+      const cluster_name = `${environment}-${stack}`;
       jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${app_name}`);
       jake.Task['slack:deployment'].execute(cluster_name, app_name);
       complete();
@@ -119,7 +122,7 @@ namespace('deploy', function () {
   });
 
   desc('Deploy application to ECS. | [cluster_name]');
-  task('all', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+  task('all', ['aws:loadCredentials'], { async: false }, function(environment, stack) {
     const cmds = [
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
     ];
@@ -139,25 +142,29 @@ namespace('deploy', function () {
     });
   });
 
-  desc('Deploy consumer | [cluster_name]');
-  task('consumer', ['aws:loadCredentials'], { async: true }, async function(cluster_name) {
+  desc('Deploy consumer | [environment, stack]');
+  task('consumer', ['aws:loadCredentials'], { async: true }, async function(environment, stack) {
     const clusterMap = {
+      'prod-lv': 'releaseProdLV',
       'production-lv': 'releaseProd',
       'staging-core': 'releaseStagingCore',
       'staging-grow': 'releaseStagingGrow',
       'staging-pp': 'releasePreProd',
       'staging-uat': 'releaseStagingUat',
       'staging-uat3': 'releaseStagingUat3',
+      'stag-qe': 'releaseStagQE',
+      'stag-uat': 'releaseStagUAT',
     };
+    const cluster_name = `${environment}-${stack}`;
     const branch = await getBranchOrTag('consumer');
     const buildArg = clusterMap[cluster_name];
     const dockerfile = ['production-lv', 'staging-pp'].includes(cluster_name) ? 'cdn' : 'non-cdn';
     const cmds = [
       `cd ${process.env.PATH_TO_CONSUMER}`,
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-      `docker build -t ${cluster_name}-consumer . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --build-arg BRANCH=${branch} --no-cache`,
-      `docker tag ${cluster_name}-consumer:latest ${ECR_URL}/${cluster_name}-consumer:latest`,
-      `docker push ${ECR_URL}/${cluster_name}-consumer:latest`,
+      `docker build -t ${stack}-consumer . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --build-arg BRANCH=${branch} --no-cache`,
+      `docker tag ${stack}-consumer:latest ${ECR_URL}/${stack}-consumer:latest`,
+      `docker push ${ECR_URL}/${stack}-consumer:latest`,
     ];
     jake.exec(cmds.join(' && '), { printStdout: true }, function(){
       jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-consumer`);
@@ -166,8 +173,8 @@ namespace('deploy', function () {
     });
   })
 
-  desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [cluster_name]');
-  task('core', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+  desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [environment, stack]');
+  task('core', ['aws:loadCredentials'], { async: false }, function(environment, stack) {
     const services = [
       'consoleapi',
       'scheduler',
@@ -181,10 +188,11 @@ namespace('deploy', function () {
       ...coreRootCommands,
     ];
 
-    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })
+    const cmds = replacer(cmdsTemplate.join(' && '), { environment, stack })
 
     jake.exec(cmds, { printStdout: true }, function(){
       services.forEach(service => {
+        const cluster_name = `${environment}-${stack}`;
         jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${service}`);
         jake.Task['slack:deployment'].execute(cluster_name, service);
       });
@@ -192,8 +200,8 @@ namespace('deploy', function () {
     });
   });
 
-  desc('Deploy all shipping services (shipping-api, shipping-worker, shipping-scheduler) to ECS. | [cluster_name]');
-  task('shipping', ['aws:loadCredentials'], { async: false }, function(cluster_name) {
+  desc('Deploy all shipping services (shipping-api, shipping-worker, shipping-scheduler) to ECS. | [environment, stack]');
+  task('shipping', ['aws:loadCredentials'], { async: false }, function(environment, stack) {
     const services = [
       'shipping-api',
       'shipping-scheduler',
@@ -206,10 +214,11 @@ namespace('deploy', function () {
       ...shippingRootCommands,
     ];
 
-    const cmds = replacer(cmdsTemplate.join(' && '), { cluster_name })
+    const cmds = replacer(cmdsTemplate.join(' && '), { environment, stack })
 
     jake.exec(cmds, { printStdout: true }, function(){
       services.forEach(service => {
+        const cluster_name = `${environment}-${stack}`;
         jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${service}`);
         jake.Task['slack:deployment'].execute(cluster_name, service);
       });
