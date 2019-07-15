@@ -22,7 +22,7 @@ Make sure your .env file is up to date
 1. Navigate to the folder you want to deploy. (Example: `greenchef/services/server-greenchef`)
 2. Check out the branch you want to deploy. (Example: `release/2018-12-04`)
 3. View the `apps` constant in the `deploy.jake` file in `jakelib` to find the correct name of the docker image you want to push to
-(Example: `greenchef/services/server-greenchef` can be deployed to `consoleapi`, `web-api`, `worker`, or `scheduler`)
+(Example: `greenchef/services/server-greenchef` can be deployed to `console-api`, `web-api`, `worker`, or `scheduler`)
 4. In a separate terminal tab, open the jakefiles repo, and run the deployment command (Example Below)
 
 #### Example Deployment Command
@@ -41,7 +41,7 @@ jake deploy:consumer['staging-uat']
 ### Deploying Groups of Services with One Command
 
 #### Core
-Instead of deploying `consoleapi`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
+Instead of deploying `console-api`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
 with the desired cluster name:
 ```bash
 jake deploy:core['staging-uat']
