@@ -1,11 +1,10 @@
-var util = require('util');
 
 namespace('ecr', function () {
 	desc('Copy images from one cluster to another | [from_cluster, to_cluster, apps]');
 	task('copyAll', ['aws:loadCredentials'], { async: true }, function(from_cluster, to_cluster) {
     const apps = ['api', 'console', 'consumer', 'inventory-worker', 'jsreports', 'scheduler', 'shipping-api', 'shipping-worker', 'shipping-scheduler', 'worker'];
-		var config = jake.Task["aws:loadCredentials"].value
-    var cmds = ['eval $(aws ecr get-login --no-include-email --region us-west-2)'];
+		const config = jake.Task["aws:loadCredentials"].value
+    const cmds = ['eval $(aws ecr get-login --no-include-email --region us-west-2)'];
 
     apps.forEach(app_name => {
       cmds.push(`docker pull 052248958630.dkr.ecr.us-west-2.amazonaws.com/${from_cluster}-${app_name}:latest`);
@@ -26,8 +25,8 @@ namespace('ecr', function () {
 	});
 
   	task('copyApps', ['aws:loadCredentials'], { async: true }, function(from_cluster, to_cluster, apps) {
-		var config = jake.Task["aws:loadCredentials"].value
-    var cmds = ['eval $(aws ecr get-login --no-include-email --region us-west-2)'];
+		const config = jake.Task["aws:loadCredentials"].value
+    const cmds = ['eval $(aws ecr get-login --no-include-email --region us-west-2)'];
 
     apps.forEach(app_name => {
       cmds.push(`docker pull 052248958630.dkr.ecr.us-west-2.amazonaws.com/${from_cluster}-${app_name}:latest`);
