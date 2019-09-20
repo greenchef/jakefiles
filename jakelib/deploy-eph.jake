@@ -91,12 +91,13 @@ namespace('deploy-eph', function () {
     const app_name = 'consumer'
     const branch = await getBranchOrTag(app_name);
 
-    const cmds = [
+    const cmdsTemplate = [
       `cd ${process.env.PATH_TO_CONSUMER}`,
-      // TODO: Ephemeral config environment variable
-      ...getDeployCommands(app_name, `-f ./docker/non-cdn.dockerfile --build-arg ENV=${'?'} --build-arg BRANCH=${branch}`),
+      ...getDeployCommands(app_name, `-f ./docker/non-cdn.dockerfile --build-arg ENV=releaseEphemeral --build-arg STACK_NAME_ARG=${stack_name} --build-arg BRANCH=${branch}`),
     ];
-    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
+    const cmds = replacer(cmdsTemplate.join(' && '), { stack_name })
+
+    jake.exec(cmds, { printStdout: true }, function(){
       jake.Task['ecs-eph:restart'].execute(stack_name, app_name);
       // jake.Task['slack:deployment'].execute(cluster_name, 'consumer');
       complete();
