@@ -4,13 +4,15 @@
   "description": "Manage AWS stuff.",
   "main": "Jakefile.js",
   "dependencies": {
-    "async": "^2.6.1",
-    "aws-sdk": "^2.35.0",
-    "axios": "^0.18.0",
+    "async": "^2.6.3",
+    "aws-sdk": "^2.532.0",
+    "axios": "^0.18.1",
+    "chalk": "^2.4.2",
     "dotenv": "^6.0.0",
     "dotenv-parse-variables": "^0.2.0",
     "jake": "^8.0.16",
     "q": "^1.5.1",
+    "readline-sync": "^1.4.10",
     "simple-git": "^1.102.0",
     "underscore": "^1.9.1"
   },
