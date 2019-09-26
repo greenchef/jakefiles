@@ -20,7 +20,8 @@ namespace('eph', () => {
 
     const servicesRequested = {
       'console': false,
-      'console-v2': false,
+      // 'console-v2': false,
+      // 'consumer': false,
       'core': false,
       'jsreports': false,
       'shipping': false,
@@ -28,7 +29,7 @@ namespace('eph', () => {
     console.log(magenta(`Creating new ephemeral environment for ${stackName}.`));
     console.log(cyan(`Please enter 'y' for each service you want to deploy code to`));
     console.log(magenta('otherwise just press return and the service will use a production image.'));
-    console.log(red('NOTE: Consumer must always be deployed by you, as it cannot use a prod image.'));
+    console.log(red('NOTE: Consumer and console-v2 must always be deployed by you, as they cannot use a prod image.'));
     Object.keys(servicesRequested).forEach(service => {
       const serviceName = cyan(service);
       const response = question(`Do you want ${serviceName}? (y/N)`);

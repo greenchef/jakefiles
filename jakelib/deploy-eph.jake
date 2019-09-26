@@ -47,7 +47,6 @@ const apps = {
   'shipping-scheduler': { cmds: shippingRootCommands },
   'shipping-worker': { cmds: shippingRootCommands },
 
-  // FRONT-ENDS
   'console': {
     cmds: [
       './node_modules/.bin/gulp buildDocker --env=eph',
@@ -55,14 +54,9 @@ const apps = {
       './node_modules/.bin/gulp build --env=dev',
     ]
   },
-  'console-v2': {
-    cmds: [
-      'npm run build-eph',
-      ...getDeployCommands('console-v2')
-    ]
-  },
 
   'jsreports': { cmds: getDeployCommands('jsreports') },
+
   'bifrost': { cmds: getDeployCommands('bifrost') }
 };
 
@@ -94,6 +88,24 @@ namespace('deploy-eph', function () {
     const cmdsTemplate = [
       `cd ${process.env.PATH_TO_CONSUMER}`,
       ...getDeployCommands(app_name, `-f ./docker/non-cdn.dockerfile --build-arg ENV=releaseEphemeral --build-arg STACK_NAME_ARG=${stack_name} --build-arg BRANCH=${branch}`),
+    ];
+    const cmds = replacer(cmdsTemplate.join(' && '), { stack_name })
+
+    jake.exec(cmds, { printStdout: true }, function(){
+      jake.Task['ecs-eph:restart'].execute(stack_name, app_name);
+      // jake.Task['slack:deployment'].execute(cluster_name, 'consumer');
+      complete();
+    });
+  })
+
+  desc('Deploy console-v2 | [stack_name]');
+  task('console-v2', ['aws:loadCredentials'], { async: false }, async function(stack_name) {
+    const app_name = 'console-v2'
+
+    const cmdsTemplate = [
+      `cd ${process.env.PATH_TO_CONSOLE_V2}`,
+      `STACK_NAME=${stack_name} npm run build-eph`,
+      ...getDeployCommands('console-v2'),
     ];
     const cmds = replacer(cmdsTemplate.join(' && '), { stack_name })
 
