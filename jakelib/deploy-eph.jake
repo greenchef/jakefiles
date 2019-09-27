@@ -49,7 +49,7 @@ const apps = {
 
   'console': {
     cmds: [
-      './node_modules/.bin/gulp buildDocker --env=eph',
+      './node_modules/.bin/gulp buildDocker --env=eph --stack_name={{stack_name}}',
       ...getDeployCommands('console'),
       './node_modules/.bin/gulp build --env=dev',
     ]
