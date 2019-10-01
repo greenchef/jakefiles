@@ -29,13 +29,13 @@ Make sure your .env file is up to date
 Deploy the "console" app to the "staging-uat" ECS cluster.
 (Staging and Production cluster names can be found on AWS in ECS Clusters)
 ```bash
-jake deploy:app['staging-uat','console']
+jake deploy:app['staging','uat','console']
 ```
 
 #### Consumer App Deployment
 To deploy the consumer app, use the following with the desired cluster name:
 ```bash
-jake deploy:consumer['staging-uat']
+jake deploy:consumer['staging','uat']
 ```
 
 ### Deploying Groups of Services with One Command
@@ -44,7 +44,7 @@ jake deploy:consumer['staging-uat']
 Instead of deploying `console-api`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
 with the desired cluster name:
 ```bash
-jake deploy:core['staging-uat']
+jake deploy:core['staging','uat']
 ```
 When using this command, note that `scheduler` will be excluded automatically from deployments to clusters with
 'staging' in their names. However, if `scheduler` is needed in a staging environment, it can be released individually
@@ -53,7 +53,7 @@ using the `deploy:app` syntax in the previous example.
 #### Shipping
 To deploy all shipping services, you can use the following with the desired cluster name:
 ```bash
-jake deploy:shipping['staging-uat']
+jake deploy:shipping['staging','uat']
 ```
 
 ### ZSH Users Special Syntax
