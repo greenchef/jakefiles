@@ -36,10 +36,14 @@ namespace('eph', () => {
       servicesRequested[service] = ['y', 'Y'].includes(response);
     })
     const serviceList = Object.entries(servicesRequested).reduce((acc, [key, val]) => {
-      if (val) acc.push(green(`${key} +`));
+      if (val) acc.push(key);
       return acc;
     }, []);
-    console.log(`Okay, you will deploy these services: ${serviceList.join(',\n')}`);
+    // Add apps that can't use prod images:
+    serviceList.push('console');
+    serviceList.push('console-v2');
+    serviceList.push('consumer');
+    console.log(`\nOkay, you will need deploy these services to your stack:\n${green(serviceList.sort().map(x => `${x} +`).join('\n'))}\n`);
 
     const timesToLive = {
       hour: '1 hour',
@@ -58,7 +62,12 @@ namespace('eph', () => {
       console.log(red('You did not correctly enter a time to live.'));
       return;
     }
-    console.log(`Okay, creating ${stackName} stack, which will exist for ${timesToLive[response]}.`)
+
+    console.log();
+    console.log(green(`Okay, creating "${stackName}" stack, which will exist for ${timesToLive[response]}.`))
+    console.log(magenta('Watch slack for a notification when your stack is ready to deploy to.'));
+    console.log()
+
     const payload = {
       QueueUrl: 'https://sqs.us-west-2.amazonaws.com/052248958630/terraform-ephemeral-agent',
       MessageBody: JSON.stringify({
@@ -74,10 +83,9 @@ namespace('eph', () => {
       }),
     }
     try {
-      const res = await SQS.sendMessage(payload).promise();
-      console.log(res);
+      await SQS.sendMessage(payload).promise();
     } catch (e) {
-      console.log(e)
+      console.log('Failed to send SQS message to create the stack. Error:', e)
     }
 
   })
