@@ -77,7 +77,7 @@ const apps = {
     cmds: [
       './node_modules/.bin/gulp buildDocker --env={{cluster_name}}',
       ...normalDeployCommands,
-      './node_modules/.bin/gulp build --env={{cluster_name}}',
+      './node_modules/.bin/gulp build --env=dev',
     ]
   },
   'console-v2': {
