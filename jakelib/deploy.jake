@@ -77,7 +77,7 @@ const apps = {
     cmds: [
       './node_modules/.bin/gulp buildDocker --env={{cluster_name}}',
       ...normalDeployCommands,
-      './node_modules/.bin/gulp build --env=dev',
+      './node_modules/.bin/gulp build --env=dev', // IMPORTANT: This resets your local build to dev so it isn't pointing wherever you just deployed (aka changing things in PROD accidentally)
     ]
   },
   'console-v2': {
