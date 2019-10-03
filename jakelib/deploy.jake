@@ -146,19 +146,13 @@ namespace('deploy', function () {
   task('consumer', ['aws:loadCredentials'], { async: true }, async function(environment, stack) {
     const clusterMap = {
       'prod-lv': 'releaseProdLV',
-      'production-lv': 'releaseProd',
-      'staging-core': 'releaseStagingCore',
-      'staging-grow': 'releaseStagingGrow',
-      'staging-pp': 'releasePreProd',
-      'staging-uat': 'releaseStagingUat',
-      'staging-uat3': 'releaseStagingUat3',
       'stag-qe': 'releaseStagQE',
       'stag-uat': 'releaseStagUAT',
     };
     const cluster_name = `${environment}-${stack}`;
     const branch = await getBranchOrTag('consumer');
     const buildArg = clusterMap[cluster_name];
-    const dockerfile = ['production-lv', 'staging-pp'].includes(cluster_name) ? 'cdn' : 'non-cdn';
+    const dockerfile = ['prod-lv'].includes(cluster_name) ? 'cdn' : 'non-cdn';
     const cmds = [
       `cd ${process.env.PATH_TO_CONSUMER}`,
       'eval $(aws ecr get-login --no-include-email --region us-west-2)',

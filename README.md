@@ -26,16 +26,16 @@ Make sure your .env file is up to date
 4. In a separate terminal tab, open the jakefiles repo, and run the deployment command (Example Below)
 
 #### Example Deployment Command
-Deploy the "console" app to the "staging-uat" ECS cluster.
+Deploy the "console" app to the "stag-uat" ECS cluster.
 (Staging and Production cluster names can be found on AWS in ECS Clusters)
 ```bash
-jake deploy:app['staging','uat','console']
+jake deploy:app['stag','uat','console']
 ```
 
 #### Consumer App Deployment
 To deploy the consumer app, use the following with the desired cluster name:
 ```bash
-jake deploy:consumer['staging','uat']
+jake deploy:consumer['stag','uat']
 ```
 
 ### Deploying Groups of Services with One Command
@@ -44,21 +44,21 @@ jake deploy:consumer['staging','uat']
 Instead of deploying `console-api`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
 with the desired cluster name:
 ```bash
-jake deploy:core['staging','uat']
+jake deploy:core['stag','uat']
 ```
 When using this command, note that `scheduler` will be excluded automatically from deployments to clusters with
-'staging' in their names. However, if `scheduler` is needed in a staging environment, it can be released individually
+'stag' in their names. However, if `scheduler` is needed in a staging environment, it can be released individually
 using the `deploy:app` syntax in the previous example.
 
 #### Shipping
 To deploy all shipping services, you can use the following with the desired cluster name:
 ```bash
-jake deploy:shipping['staging','uat']
+jake deploy:shipping['stag','uat']
 ```
 
 ### ZSH Users Special Syntax
 According to the [official documentation](http://jakejs.com/docs), ZSH users may need to do one of two things to run `jake` commands:
-- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[staging-uat,console]'`
+- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[stag,uat,console]'`
 
 -- OR --
 
