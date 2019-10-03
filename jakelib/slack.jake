@@ -12,7 +12,7 @@ namespace('slack', function () {
 
     const username = getUsername();
     const message = `Branch ${branch_name} for ${service_name} deployed to ${cluster_name} by ${username}.`;
-    const slackPostUrl = cluster_name.startsWith('production') ? prodSlackPostUrl : stagingSlackPostUrl;
+    const slackPostUrl = cluster_name.startsWith('prod') ? prodSlackPostUrl : stagingSlackPostUrl;
     let payload = {
       username: "Deployment Notice",
       icon_emoji: ":rocket:",
