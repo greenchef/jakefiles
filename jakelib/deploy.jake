@@ -96,7 +96,9 @@ const apps = {
   'inventory-worker': { cmds: normalDeployCommands },
   'jsreports': { cmds: normalDeployCommands },
   'bifrost': { cmds: normalDeployCommands },
-  'auth-api': { cmds: authRootCommands }
+  'auth-api': { cmds: authRootCommands },
+  'marketing-frontend': { cmds: normalDeployCommands},
+  'frontend-proxy': { cmds: normalDeployCommands},
 };
 
 namespace('deploy', function () {
