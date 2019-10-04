@@ -8,8 +8,10 @@ const {
   PATH_TO_CONSOLE,
   PATH_TO_CONSOLE_V2,
   PATH_TO_CONSUMER,
+  PATH_TO_FRONTEND_PROXY,
   PATH_TO_INVENTORY,
   PATH_TO_JSREPORTS,
+  PATH_TO_MARKETING_FRONTEND,
   PATH_TO_SERVER,
   PATH_TO_SHIPPING_PLATFORM,
 } = process.env;
@@ -30,10 +32,14 @@ const serviceToPath = (service_name) => {
       return PATH_TO_CONSOLE_V2
     case 'consumer':
       return PATH_TO_CONSUMER
+    case 'frontend-proxy':
+      return PATH_TO_FRONTEND_PROXY
     case 'jsreports':
       return PATH_TO_JSREPORTS
     case 'inventory-worker':
       return PATH_TO_INVENTORY
+    case 'marketing-frontend':
+      return PATH_TO_MARKETING_FRONTEND
     case 'console-api':
     case 'web-api':
     case 'worker':
