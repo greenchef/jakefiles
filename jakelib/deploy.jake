@@ -231,10 +231,12 @@ namespace('deploy', function () {
 			readSecret.addListener('stdout', function (msg) {
         const secret = msg.toString().trim();
         const cluster_name = `${environment}-${stack}`;
+        const isCDN = ['prod-lv', 'stag-uat'].includes(cluster_name);
+        const bucket = cluster_name === 'prod-lv' ? 'cdn.greechef.com' : 'pre-prod-cdn.greenchef.com';
         const cmds = [
           `cd ${process.env.PATH_TO_MARKETING_FRONTEND}`,
           'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-          `docker build -t ${stack}-marketing-frontend . -f Dockerfile --build-arg AWS_ACCESS_KEY_ID=${key} --build-arg AWS_SECRET_ACCESS_KEY=${secret}`,
+          `docker build -t ${stack}-marketing-frontend . -f Dockerfile --build-arg AWS_ACCESS_KEY_ID=${key} --build-arg AWS_SECRET_ACCESS_KEY=${secret} --build-arg IS_CDN=${isCDN} --build-arg BUCKET=${bucket}`,
           `docker tag ${stack}-marketing-frontend:latest ${ECR_URL}/${stack}-marketing-frontend:latest`,
           `docker push ${ECR_URL}/${stack}-marketing-frontend:latest`,
         ];
