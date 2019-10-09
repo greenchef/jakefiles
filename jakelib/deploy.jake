@@ -223,6 +223,16 @@ namespace('deploy', function () {
   });
 
   task('marketing', function(environment, stack) {
+    const config = {
+      'prod-lv': {
+        cdnBucket: 'greechef.com',
+        useCDN: true,
+      },
+      'stag-uat': {
+        cdnBucket: 'pre-prod-consumer.greenchef.com',
+        useCDN: true,
+      },
+    };
     console.log('running marketing')
     const readKey = jake.createExec([`aws configure get aws_access_key_id`]);
 		readKey.addListener('stdout', function (msg) {
@@ -230,19 +240,18 @@ namespace('deploy', function () {
 			const readSecret = jake.createExec([`aws configure get aws_secret_access_key`]);
 			readSecret.addListener('stdout', function (msg) {
         const secret = msg.toString().trim();
-        const cluster_name = `${environment}-${stack}`;
-        const isCDN = ['prod-lv', 'stag-uat'].includes(cluster_name);
-        const bucket = cluster_name === 'prod-lv' ? 'cdn.greechef.com' : 'pre-prod-cdn.greenchef.com';
+        const clusterName = `${environment}-${stack}`;
+        const { cdnBucket, useCDN } = environment === 'eph' ? config[clusterName] || {};
         const cmds = [
           `cd ${process.env.PATH_TO_MARKETING_FRONTEND}`,
           'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-          `docker build -t ${stack}-marketing-frontend . -f Dockerfile --build-arg AWS_ACCESS_KEY_ID=${key} --build-arg AWS_SECRET_ACCESS_KEY=${secret} --build-arg IS_CDN=${isCDN} --build-arg BUCKET=${bucket}`,
+          `docker build -t ${stack}-marketing-frontend . -f Dockerfile --build-arg AWS_ACCESS_KEY_ID=${key} --build-arg AWS_SECRET_ACCESS_KEY=${secret} --build-arg IS_CDN=${useCDN} --build-arg BUCKET=${cdnBucket} --build-arg BUILD_TARGET=${clusterName}`,
           `docker tag ${stack}-marketing-frontend:latest ${ECR_URL}/${stack}-marketing-frontend:latest`,
           `docker push ${ECR_URL}/${stack}-marketing-frontend:latest`,
         ];
         jake.exec(cmds.join(' && '), { printStdout: true }, function(){
-          jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-marketing-frontend`);
-          jake.Task['slack:deployment'].execute(cluster_name, 'marketing-frontend');
+          jake.Task['ecs:restart'].execute(clusterName, `${clusterName}-marketing-frontend`);
+          jake.Task['slack:deployment'].execute(clusterName, 'marketing-frontend');
           complete();
         });
 
