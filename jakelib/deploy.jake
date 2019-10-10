@@ -28,7 +28,7 @@ const buildCmdString = (path, environment, stack, app_name) => {
 };
 
 const normalDeployCommands = [
-  'docker build -t {{stack}}-{{app_name}} . --no-cache',
+  `docker build -t {{stack}}-{{app_name}} . --build-arg CLUSTER={{cluster_name}}  --no-cache`,
   `docker tag {{stack}}-{{app_name}}:latest ${ECR_URL}/{{stack}}-{{app_name}}:latest`,
   `docker push ${ECR_URL}/{{stack}}-{{app_name}}:latest`,
 ]
