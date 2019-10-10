@@ -224,6 +224,9 @@ namespace('deploy', function () {
 
   task('marketing', function(environment, stack) {
     const config = {
+      eph: {
+        
+      },
       'prod-lv': {
         cdnBucket: 'greechef.com',
         useCDN: true,
@@ -241,7 +244,7 @@ namespace('deploy', function () {
 			readSecret.addListener('stdout', function (msg) {
         const secret = msg.toString().trim();
         const clusterName = `${environment}-${stack}`;
-        const { cdnBucket, useCDN } = environment === 'eph' ? config[clusterName] || {};
+        const { cdnBucket, useCDN } = environment === 'eph' ? config.eph : (config[clusterName] || {});
         const cmds = [
           `cd ${process.env.PATH_TO_MARKETING_FRONTEND}`,
           'eval $(aws ecr get-login --no-include-email --region us-west-2)',
