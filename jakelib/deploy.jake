@@ -175,6 +175,31 @@ namespace('deploy', function () {
     });
   })
 
+  desc('Deploy app_greenchef | [environment, stack]');
+  task('app_greenchef', ['aws:loadCredentials'], { async: true }, async function (environment, stack) {
+    const clusterMap = {
+      'prod-lv': 'releaseProdLV',
+      'stag-qe': 'releaseStagQE',
+      'stag-uat': 'releaseStagUAT',
+    };
+    const cluster_name = `${environment}-${stack}`;
+    const branch = await getBranchOrTag('app-greenchef');
+    const buildArg = clusterMap[cluster_name];
+    const dockerfile = [].includes(cluster_name) ? 'cdn' : 'non-cdn';
+    const cmds = [
+      `cd ${process.env.PATH_TO_CONSUMER}`,
+      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+      `docker build -t ${stack}-app-greenchef . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --build-arg BRANCH=${branch} --no-cache`,
+      `docker tag ${stack}-app-greenchef:latest ${ECR_URL}/${stack}-app-greenchef:latest`,
+      `docker push ${ECR_URL}/${stack}-app-greenchef:latest`,
+    ];
+    jake.exec(cmds.join(' && '), { printStdout: true }, function () {
+      jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-app-greenchef`);
+      jake.Task['slack:deployment'].execute(cluster_name, 'app-greenchef');
+      complete();
+    });
+  })
+
   desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [environment, stack]');
   task('core', ['aws:loadCredentials'], { async: false }, function (environment, stack) {
     const services = [

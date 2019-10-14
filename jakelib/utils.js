@@ -30,6 +30,7 @@ const serviceToPath = (service_name) => {
       return PATH_TO_CONSOLE
     case 'console-v2':
       return PATH_TO_CONSOLE_V2
+    case 'app-greenchef':
     case 'consumer':
       return PATH_TO_CONSUMER
     case 'frontend-proxy':
