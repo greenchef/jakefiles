@@ -259,18 +259,12 @@ namespace('deploy', function () {
 
       },
       'prod-lv': {
-        cdnBucket: 'greechef.com',
-        cdnPrefix: 'https://cdn.greenchef.com',
         useCDN: true,
       },
       'stag-uat': {
-        cdnBucket: 'pre-prod-consumer.greenchef.com',
-        cdnPrefix: 'https://pre-prod-cdn.greenchef.com',
         useCDN: true,
       },
       'stag-qe': {
-        cdnBucket: 'pre-prod-consumer.greenchef.com',
-        cdnPrefix: 'https://pre-prod-cdn.greenchef.com',
         useCDN: true,
       },
     };
@@ -281,12 +275,11 @@ namespace('deploy', function () {
       readSecret.addListener('stdout', function (msg) {
         const secret = msg.toString().trim();
         const clusterName = `${environment}-${stack}`;
-        const { cdnBucket, cdnPrefix, useCDN } = environment === 'eph' ? config.eph : (config[clusterName] || {});
-        const buildId = Date.now().toString()
+        const { useCDN } = environment === 'eph' ? config.eph : (config[clusterName] || {});
         const cmds = [
           `cd ${process.env.PATH_TO_MARKETING_FRONTEND}`,
           'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-          `docker build -t ${stack}-marketing-frontend . -f Dockerfile --build-arg AWS_ACCESS_KEY_ID=${key} --build-arg AWS_SECRET_ACCESS_KEY=${secret} --build-arg IS_CDN=${useCDN} --build-arg BUCKET=${cdnBucket} --build-arg CDN_PREFIX=${cdnPrefix} --build-arg BUILD_ID=${buildId} --build-arg BUILD_TARGET=${clusterName}`,
+          `docker build -t ${stack}-marketing-frontend . -f Dockerfile --build-arg AWS_ACCESS_KEY_ID=${key} --build-arg AWS_SECRET_ACCESS_KEY=${secret} --build-arg IS_CDN=${useCDN} --build-arg BUILD_TARGET=${clusterName}`,
           `docker tag ${stack}-marketing-frontend:latest ${ECR_URL}/${stack}-marketing-frontend:latest`,
           `docker push ${ECR_URL}/${stack}-marketing-frontend:latest`,
         ];
