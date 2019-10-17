@@ -38,6 +38,12 @@ To deploy the consumer app, use the following with the desired cluster name:
 jake deploy:consumer['stag','uat']
 ```
 
+#### Marketing Frontend App Deployment
+To deploy the marketing-frontend app, use the following with the desired cluster name:
+```bash
+jake deploy:marketing['stag','uat']
+```
+
 ### Deploying Groups of Services with One Command
 
 #### Core
