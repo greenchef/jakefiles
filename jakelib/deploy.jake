@@ -253,6 +253,7 @@ namespace('deploy', function () {
     });
   });
 
+  desc('Deploy marketing application | [environment, stack]');
   task('marketing', function (environment, stack) {
     const config = {
       eph: {
