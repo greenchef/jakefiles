@@ -156,6 +156,8 @@ namespace('deploy', function () {
       'prod-lv': 'releaseProdLV',
       'stag-qe': 'releaseStagQE',
       'stag-uat': 'releaseStagUAT',
+      'stag-one': 'releaseStagOne',
+      'stag-two': 'releaseStagTwo'
     };
     const cluster_name = `${environment}-${stack}`;
     const branch = await getBranchOrTag('consumer');
@@ -181,6 +183,8 @@ namespace('deploy', function () {
       'prod-lv': 'releaseProdLV',
       'stag-qe': 'releaseStagQE',
       'stag-uat': 'releaseStagUAT',
+      'stag-one': 'releaseStagOne',
+      'stag-two': 'releaseStagTwo'
     };
     const cluster_name = `${environment}-${stack}`;
     const branch = await getBranchOrTag('app-greenchef');
@@ -268,6 +272,12 @@ namespace('deploy', function () {
       'stag-qe': {
         useCDN: true,
       },
+      'stag-one': {
+        useCDN: true,
+      },
+      'stag-two': {
+        useCDN: true,
+      }
     };
     const readKey = jake.createExec([`aws configure get aws_access_key_id`]);
     readKey.addListener('stdout', function (msg) {
