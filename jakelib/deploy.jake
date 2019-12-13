@@ -157,7 +157,8 @@ namespace('deploy', function () {
       'stag-qe': 'releaseStagQE',
       'stag-uat': 'releaseStagUAT',
       'stag-one': 'releaseStagOne',
-      'stag-two': 'releaseStagTwo'
+      'stag-two': 'releaseStagTwo',
+      'stag-pp': 'releaseStagPP'
     };
     const cluster_name = `${environment}-${stack}`;
     const branch = await getBranchOrTag('consumer');
