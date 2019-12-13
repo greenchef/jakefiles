@@ -269,13 +269,13 @@ namespace('deploy', function () {
         useCDN: true,
       },
       'stag-uat': {
-        useCDN: true,
+        useCDN: false,
       },
       'stag-qe': {
-        useCDN: true,
+        useCDN: false,
       },
       'stag-one': {
-        useCDN: true,
+        useCDN: false,
       },
       'stag-two': {
         useCDN: true,
