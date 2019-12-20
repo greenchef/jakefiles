@@ -279,6 +279,9 @@ namespace('deploy', function () {
       },
       'stag-two': {
         useCDN: true,
+      },
+      'stag-pp': {
+        useCDN: true,
       }
     };
     const readKey = jake.createExec([`aws configure get aws_access_key_id`]);
