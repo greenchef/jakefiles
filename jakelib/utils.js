@@ -27,10 +27,12 @@ const serviceToPath = (service_name) => {
     case 'bifrost':
       return PATH_TO_BIFROST
     case 'console':
+    case 'console-web':
       return PATH_TO_CONSOLE
     case 'console-v2':
       return PATH_TO_CONSOLE_V2
     case 'app-greenchef':
+    case 'app_greenchef':
     case 'consumer':
       return PATH_TO_CONSUMER
     case 'frontend-proxy':
