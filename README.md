@@ -35,13 +35,13 @@ jake deploy:app['stag','uat','console']
 #### Consumer App Deployment
 To deploy the consumer app, use the following with the desired cluster name:
 ```bash
-jake deploy:consumer['stag','uat']
+jake deploy:app['stag','uat','app-greenchef']
 ```
 
 #### Marketing Frontend App Deployment
 To deploy the marketing-frontend app, use the following with the desired cluster name:
 ```bash
-jake deploy:marketing['stag','uat']
+jake deploy:app['stag','uat','marketing-frontend']
 ```
 
 ### Deploying Groups of Services with One Command
