@@ -78,33 +78,21 @@ const apps = {
   'shipping-scheduler': { cmds: shippingRootCommands },
   'shipping-worker': { cmds: shippingRootCommands },
 
-  // FRONT-ENDS
-  console: {
-    cmds: [
-      './node_modules/.bin/gulp buildDocker --env={{cluster_name}}',
-      ...normalDeployCommands,
-      './node_modules/.bin/gulp build --env=dev', // IMPORTANT: This resets your local build to dev so it isn't pointing wherever you just deployed (aka changing things in PROD accidentally)
-    ]
-  },
-  'console-v2': {
-    cmds: [
-      'npm run build-{{cluster_name}}',
-      ...normalDeployCommands,
-    ]
-  },
-
   // ANALYTICS
   'analytics-mosql-logevents': { cmds: getAnalyticsCommands('mosql-logevents') },
   'analytics-mosql-models': { cmds: getAnalyticsCommands('mosql-models') },
   'analytics-mosql-shipping': { cmds: getAnalyticsCommands('mosql-shipping') },
 
   // MISCELLANEOUS
+  'app-greenchef': { cmds: normalDeployCommands },
+  'auth-api': { cmds: authRootCommands },
+  'bifrost': { cmds: normalDeployCommands },
+  'console-v2': { cmds: normalDeployCommands },
+  'console': { cmds: normalDeployCommands },
+  'frontend-proxy': { cmds: normalDeployCommands },
   'inventory-worker': { cmds: inventoryDeployCommands },
   'jsreports': { cmds: normalDeployCommands },
-  'bifrost': { cmds: normalDeployCommands },
-  'auth-api': { cmds: authRootCommands },
   'marketing-frontend': { cmds: normalDeployCommands },
-  'frontend-proxy': { cmds: normalDeployCommands },
 };
 
 namespace('deploy', function () {
@@ -150,61 +138,6 @@ namespace('deploy', function () {
     });
   });
 
-  desc('Deploy consumer | [environment, stack]');
-  task('consumer', ['aws:loadCredentials'], { async: true }, async function (environment, stack) {
-    const clusterMap = {
-      'prod-lv': 'releaseProdLV',
-      'stag-qe': 'releaseStagQE',
-      'stag-uat': 'releaseStagUAT',
-      'stag-one': 'releaseStagOne',
-      'stag-two': 'releaseStagTwo',
-      'stag-pp': 'releaseStagPP'
-    };
-    const cluster_name = `${environment}-${stack}`;
-    const branch = await getBranchOrTag('consumer');
-    const buildArg = clusterMap[cluster_name];
-    const dockerfile = ['prod-lv'].includes(cluster_name) ? 'cdn' : 'non-cdn';
-    const cmds = [
-      `cd ${process.env.PATH_TO_CONSUMER}`,
-      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-      `docker build -t ${stack}-consumer . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --build-arg BRANCH=${branch} --no-cache`,
-      `docker tag ${stack}-consumer:latest ${ECR_URL}/${stack}-consumer:latest`,
-      `docker push ${ECR_URL}/${stack}-consumer:latest`,
-    ];
-    jake.exec(cmds.join(' && '), { printStdout: true }, function () {
-      jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-consumer`);
-      jake.Task['slack:deployment'].execute(cluster_name, 'consumer');
-      complete();
-    });
-  })
-
-  desc('Deploy app_greenchef | [environment, stack]');
-  task('app_greenchef', ['aws:loadCredentials'], { async: true }, async function (environment, stack) {
-    const clusterMap = {
-      'prod-lv': 'releaseProdLV',
-      'stag-qe': 'releaseStagQE',
-      'stag-uat': 'releaseStagUAT',
-      'stag-one': 'releaseStagOne',
-      'stag-two': 'releaseStagTwo',
-      'stag-pp': 'releaseStagPP'
-    };
-    const cluster_name = `${environment}-${stack}`;
-    const branch = await getBranchOrTag('app-greenchef');
-    const buildArg = clusterMap[cluster_name];
-    const dockerfile = [].includes(cluster_name) ? 'cdn' : 'non-cdn';
-    const cmds = [
-      `cd ${process.env.PATH_TO_CONSUMER}`,
-      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-      `docker build -t ${stack}-app-greenchef . -f ./docker/${dockerfile}.dockerfile --build-arg ENV=${buildArg} --build-arg BRANCH=${branch} --no-cache`,
-      `docker tag ${stack}-app-greenchef:latest ${ECR_URL}/${stack}-app-greenchef:latest`,
-      `docker push ${ECR_URL}/${stack}-app-greenchef:latest`,
-    ];
-    jake.exec(cmds.join(' && '), { printStdout: true }, function () {
-      jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-app-greenchef`);
-      jake.Task['slack:deployment'].execute(cluster_name, 'app-greenchef');
-      complete();
-    });
-  })
 
   desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [environment, stack]');
   task('core', ['aws:loadCredentials'], { async: false }, function (environment, stack) {
@@ -258,6 +191,7 @@ namespace('deploy', function () {
       complete();
     });
   });
+  
 
   desc('Deploy marketing application | [environment, stack]');
   task('marketing', function (environment, stack) {
