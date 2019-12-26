@@ -117,27 +117,6 @@ namespace('deploy', function () {
     });
   });
 
-  desc('Deploy application to ECS. | [cluster_name]');
-  task('all', ['aws:loadCredentials'], { async: false }, function (environment, stack) {
-    const cmds = [
-      'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-    ];
-
-    Object.keys(apps).forEach(appName => {
-      if (appName !== 'consoleapi') { // commands for consoleapi and web-api are identical, no need to repeat
-        cmds.push(buildCmdString(serviceToPath(appName), cluster_name, appName));
-      }
-    });
-
-    jake.exec(cmds.join(' && '), { printStdout: true }, function () {
-      Object.keys(apps).forEach(appName => {
-        jake.Task['ecs:restart'].execute(cluster_name, `${cluster_name}-${appName}`);
-        jake.Task['slack:deployment'].execute(cluster_name, appName);
-      });
-      complete();
-    });
-  });
-
 
   desc('Deploy all core services (consoleapi, web-api, worker, scheduler) to ECS. | [environment, stack]');
   task('core', ['aws:loadCredentials'], { async: false }, function (environment, stack) {
@@ -192,56 +171,4 @@ namespace('deploy', function () {
     });
   });
   
-
-  desc('Deploy marketing application | [environment, stack]');
-  task('marketing', function (environment, stack) {
-    const config = {
-      eph: {
-
-      },
-      'prod-lv': {
-        useCDN: true,
-      },
-      'stag-uat': {
-        useCDN: false,
-      },
-      'stag-qe': {
-        useCDN: false,
-      },
-      'stag-one': {
-        useCDN: false,
-      },
-      'stag-two': {
-        useCDN: true,
-      },
-      'stag-pp': {
-        useCDN: true,
-      }
-    };
-    const readKey = jake.createExec([`aws configure get aws_access_key_id`]);
-    readKey.addListener('stdout', function (msg) {
-      const key = msg.toString().trim();
-      const readSecret = jake.createExec([`aws configure get aws_secret_access_key`]);
-      readSecret.addListener('stdout', function (msg) {
-        const secret = msg.toString().trim();
-        const clusterName = `${environment}-${stack}`;
-        const { useCDN } = environment === 'eph' ? config.eph : (config[clusterName] || {});
-        const cmds = [
-          `cd ${process.env.PATH_TO_MARKETING_FRONTEND}`,
-          'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-          `docker build -t ${stack}-marketing-frontend . -f Dockerfile --build-arg AWS_ACCESS_KEY_ID=${key} --build-arg AWS_SECRET_ACCESS_KEY=${secret} --build-arg IS_CDN=${useCDN} --build-arg BUILD_TARGET=${clusterName}`,
-          `docker tag ${stack}-marketing-frontend:latest ${ECR_URL}/${stack}-marketing-frontend:latest`,
-          `docker push ${ECR_URL}/${stack}-marketing-frontend:latest`,
-        ];
-        jake.exec(cmds.join(' && '), { printStdout: true }, function () {
-          jake.Task['ecs:restart'].execute(clusterName, `${clusterName}-marketing-frontend`);
-          jake.Task['slack:deployment'].execute(clusterName, 'marketing-frontend');
-          complete();
-        });
-
-      });
-      readSecret.run();
-    });
-    readKey.run();
-  });
 });
