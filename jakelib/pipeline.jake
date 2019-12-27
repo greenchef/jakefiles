@@ -1,7 +1,7 @@
 const { getUsername } = require('./utils');
 
 const YMIR_ARN = 'arn:aws:lambda:us-west-2:052248958630:function:deployer-ymir';
-const CLUSTERS = ['one','two','uat','qe','lv'];
+const CLUSTERS = ['one','two','uat','qe','lv','pp'];
 const REPOS = ['app-greenchef','auth-platform','bifrost','console-frontend','console-web','frontend-proxy','greenchef','reports','marketing-frontend','shipping-platform'];
 
 namespace('pipeline', function () {
