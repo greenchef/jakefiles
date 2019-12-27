@@ -1,16 +1,51 @@
 const { getUsername } = require('./utils');
 
 const YMIR_ARN = 'arn:aws:lambda:us-west-2:052248958630:function:deployer-ymir';
-const CLUSTERS = ['one','two','uat','qe','lv','pp'];
-const REPOS = ['app-greenchef','auth-platform','bifrost','console-frontend','console-web','frontend-proxy','greenchef','reports','marketing-frontend','shipping-platform'];
+
+const CLUSTERS = {
+  prod: {
+    lv : { protected: true },
+  },
+  stag : {
+    pp: { protected: true },
+    one: { protected: false },
+    two: { protected: false },
+    qe: { protected: false },
+    uat: { protected: false },
+  },
+}
+
+const REPOS = [
+  'app-greenchef',
+  'auth-platform',
+  'bifrost',
+  'console-frontend',
+  'console-web',
+  'frontend-proxy',
+  'greenchef',
+  'reports',
+  'marketing-frontend',
+  'shipping-platform',
+];
 
 namespace('pipeline', function () {
 	desc('Deploy via pipeline. | [\'env\',\'cluster\',\'repo\',\'branch\']');
 	task('deploy', ['aws:loadCredentials'], { async: true }, function(environment, cluster, repo, toBranch) {
-    if (cluster === 'lv' && environment !== 'prod' || cluster !== 'lv' && environment === 'prod') throw new Error('"prod" must be paired with "lv"');
-    if (!CLUSTERS.includes(cluster)) throw new Error('unsupported cluster');
-    if (!REPOS.includes(repo)) throw new Error('unsupported repo');
+
+    try {
+      let a = CLUSTERS[environment][cluster].protected;
+    } catch (e) {
+      throw new Error(`environment and cluster MISMATCH "${cluster}" is not a valid "${environment}" cluster`)
+    }
+
+    const IS_PROTECTED_TARGET = CLUSTERS[environment][cluster].protected;
+    const IS_RELEASE_BRANCH = toBranch.includes('release/') || toBranch.includes('hotfix/');
+
+    if (IS_PROTECTED_TARGET && !IS_RELEASE_BRANCH) throw new Error(`PROTECTED cluster "${environment}-${cluster}" must target a release or hotfix tag`);
+    if (!REPOS.includes(repo)) throw new Error('UNSUPPORTED repo');
+
     const username = getUsername();
+
 		const cmds = [
       `aws lambda invoke --function-name ${YMIR_ARN} --invocation-type Event --payload '{"requester":"${username}","repo_name":"${repo}","origin_branch":"${toBranch}","destination_branch":"${cluster}"}' response.json`
     ];
