@@ -15,7 +15,26 @@ This is a collection of tasks executed with the Jake task runner. See http://jak
 may not use `~`. Example: `/Users/USERNAME/PATHTOREPO`
 6. jake -T
 
-### How to Deploy to Staging or Production
+### Deploy to Staging or Production using GitHub and the Deployment Pipeline
+See [this Confluence document](https://greenchef.atlassian.net/wiki/spaces/GCE/pages/167051304/Deployments+with+Jake+and+Codepipeline)
+for more details about the pipeline.
+
+1. Make sure the branch you want to deploy is fully up to date on GitHub. This method deploys directly from GitHub.
+2. In a terminal window, navigate to the jakefiles repo and run a deployment command in the following format:
+    ```bash
+    Template: 
+    jake pipeline:deploy['ENVIRONMENT','CLUSTER','REPO','BRANCH']
+    
+    Example:
+    jake pipeline:deploy['stag','one','app-greenchef','my-branch']
+    ```
+   - ENVIRONMENT is either stag (staging) or prod (production)
+   - CLUSTER names can be found on AWS in ECS Clusters
+   - REPO is the name of the repo in GitHub
+   - BRANCH is the name of the branch to be deployed
+3. Monitor the progress of your deployment in AWS or via #gc-releases in Slack.
+
+### Old way: Deploy to Staging or Production from a Local Branch
 Make sure your .env file is up to date
 (Example: `PATH_TO_CONSOLE=/Users/bgreene/GreenChef/console-web/`)
 
@@ -30,18 +49,6 @@ Deploy the "console" app to the "stag-uat" ECS cluster.
 (Staging and Production cluster names can be found on AWS in ECS Clusters)
 ```bash
 jake deploy:app['stag','uat','console']
-```
-
-#### Consumer App Deployment
-To deploy the consumer app, use the following with the desired cluster name:
-```bash
-jake deploy:app['stag','uat','app-greenchef']
-```
-
-#### Marketing Frontend App Deployment
-To deploy the marketing-frontend app, use the following with the desired cluster name:
-```bash
-jake deploy:app['stag','uat','marketing-frontend']
 ```
 
 ### Deploying Groups of Services with One Command
