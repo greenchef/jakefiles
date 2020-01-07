@@ -34,6 +34,16 @@ for more details about the pipeline.
    - BRANCH is the name of the branch to be deployed
 3. Monitor the progress of your deployment in AWS or via #gc-releases in Slack.
 
+### Deploy latest release branches to Staging environment using Deployment Pipeline
+    ```bash
+    Template: 
+    jake pipeline:refresh['CLUSTER']
+    
+    Example:
+    jake pipeline:refresh['one']
+    ```
+
+
 ### Old way: Deploy to Staging or Production from a Local Branch
 Make sure your .env file is up to date
 (Example: `PATH_TO_CONSOLE=/Users/bgreene/GreenChef/console-web/`)
