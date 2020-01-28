@@ -43,45 +43,9 @@ for more details about the pipeline.
     jake pipeline:refresh['one']
     ```
 
-
-### Old way: Deploy to Staging or Production from a Local Branch
-Make sure your .env file is up to date
-(Example: `PATH_TO_CONSOLE=/Users/bgreene/GreenChef/console-web/`)
-
-1. Navigate to the folder you want to deploy. (Example: `greenchef/services/server-greenchef`)
-2. Check out the branch you want to deploy. (Example: `release/2018-12-04`)
-3. View the `apps` constant in the `deploy.jake` file in `jakelib` to find the correct name of the docker image you want to push to
-(Example: `greenchef/services/server-greenchef` can be deployed to `console-api`, `web-api`, `worker`, or `scheduler`)
-4. In a separate terminal tab, open the jakefiles repo, and run the deployment command (Example Below)
-
-#### Example Deployment Command
-Deploy the "console" app to the "stag-uat" ECS cluster.
-(Staging and Production cluster names can be found on AWS in ECS Clusters)
-```bash
-jake deploy:app['stag','uat','console']
-```
-
-### Deploying Groups of Services with One Command
-
-#### Core
-Instead of deploying `console-api`, `web-api`, `worker`, and `scheduler` individually, you can instead use the following
-with the desired cluster name:
-```bash
-jake deploy:core['stag','uat']
-```
-When using this command, note that `scheduler` will be excluded automatically from deployments to clusters with
-'stag' in their names. However, if `scheduler` is needed in a staging environment, it can be released individually
-using the `deploy:app` syntax in the previous example.
-
-#### Shipping
-To deploy all shipping services, you can use the following with the desired cluster name:
-```bash
-jake deploy:shipping['stag','uat']
-```
-
 ### ZSH Users Special Syntax
 According to the [official documentation](http://jakejs.com/docs), ZSH users may need to do one of two things to run `jake` commands:
-- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'deploy:app[stag,uat,console]'`
+- Escape brackets or wrap them in single quotes and omit inner quotes: `jake 'pipeline:deploy['stag','one','console','my-branch']'`
 
 -- OR --
 
