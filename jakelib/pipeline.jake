@@ -14,7 +14,7 @@ const CLUSTERS = {
     qe: { protected: false },
     uat: { protected: false },
   },
-}
+};
 
 const REPOS = [
   'app-greenchef',
