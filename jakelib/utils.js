@@ -13,7 +13,7 @@ const {
   PATH_TO_JSREPORTS,
   PATH_TO_MARKETING_FRONTEND,
   PATH_TO_SERVER,
-  PATH_TO_SHIPPING_PLATFORM,
+  PATH_TO_SHIPPING,
 } = process.env;
 
 const serviceToPath = (service_name) => {
@@ -51,7 +51,7 @@ const serviceToPath = (service_name) => {
     case 'shipping-api':
     case 'shipping-worker':
     case 'shipping-scheduler':
-      return PATH_TO_SHIPPING_PLATFORM
+      return PATH_TO_SHIPPING
     default:
       throw new Error(`Unable to find path for service name: ${service_name}`);
   }
@@ -67,6 +67,23 @@ const getBranchOrTag = async (service_name) => {
 
 const getUsername = () => GITHUB_USERNAME;
 
+const replacer = (value, variables) => {
+  if(!value) return value;
+
+  const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
+  value.match(var_pattern).forEach(matched_var => {
+    const idx = value.indexOf(matched_var);
+    if (idx > -1) {
+      const value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
+      if (value_for_replace != null) {
+        value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
+      }
+    }
+  });
+  return value;
+}
+
 exports.getBranchOrTag = getBranchOrTag;
 exports.getUsername = getUsername;
+exports.replacer = replacer;
 exports.serviceToPath = serviceToPath;

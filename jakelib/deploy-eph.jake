@@ -60,7 +60,7 @@ const apps = {
   'bifrost': { cmds: getDeployCommands('bifrost') }
 };
 
-namespace('deploy-eph', function () {
+namespace('deploy-eph-1', function () {
   desc('Deploy application | [stack_name,app_name]');
   task('app', ['aws:loadCredentials'], { async: false }, function(stack_name, app_name) {
     const path = serviceToPath(app_name);
