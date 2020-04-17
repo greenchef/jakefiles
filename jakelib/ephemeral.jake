@@ -14,8 +14,8 @@ namespace('eph', () => {
   desc('Create an ephemeral environment | [stackname] | `stackname` must be alphanumeric and between 1 and 9 characters long')
   task('create', ['aws:loadCredentials'], { async: true }, async stackName => {
     stackName = stackName.toLowerCase();
-    if (stackName.length < 1 || stackName.length > 9 || stackName.replace(/\w/g, '').length > 0) {
-      red('`stackname` must be alphanumeric and between 1 and 9 characters long!')
+    if (stackName.length < 1 || stackName.length > 6 || stackName.replace(/\w/g, '').length > 0) {
+      red('`stackname` must be alphanumeric and between 1 and 6 characters long!')
       return;
     }
 
