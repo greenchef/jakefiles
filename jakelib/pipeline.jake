@@ -58,15 +58,16 @@ namespace('pipeline', function () {
     jake.exec(cmds, { printStdout: true });
   });
   
-  desc('Refresh via pipeline. | [\'cluster\']');
-	task('refresh', ['aws:loadCredentials'], { async: true }, function(cluster) {
+  desc('Refresh via pipeline. | [\'cluster\',optional:\'ephemeral stack\']');
+	task('refresh', ['aws:loadCredentials'], { async: true }, function(cluster, ephStack) {
 
-    const allowed_clusters = (Object.keys(CLUSTERS.stag)).push('eph');
+    const allowed_clusters = Object.keys(CLUSTERS.stag)
+    allowed_clusters.push('eph');
 
     if (!allowed_clusters.includes(cluster)) throw new Error(`Not a supported cluster. Supported clusters: ${allowed_envs.toString()}`)
-
+    const additionalPayload = ephStack ? `, "ephStack": "${ephStack}"` : '';
 		const cmds = [
-      `aws lambda invoke --function-name ${REFRESHER_ARN} --invocation-type Event --payload '{"optionalEnv":"${cluster}"}' response.json`
+      `aws lambda invoke --function-name ${REFRESHER_ARN} --invocation-type Event --payload '{"optionalEnv":"${cluster}"${additionalPayload}}' response.json`
     ];
     console.log('If the execution was successful, you will get a 202 response code below:');
     jake.exec(cmds, { printStdout: true });

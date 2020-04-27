@@ -20,25 +20,18 @@ namespace('eph', () => {
     }
 
     const servicesRequested = {
-      'app-greenchef': false,
-      'auth': false,
-      'bifrost': false,
-      'console': false,
-      'console-v2': false,
-      'core': false,
-      'frontend-proxy': false,
-      'jsreports': false,
-      'marketing-frontend': false,
-      'shipping': false,
+      'app-greenchef': true,
+      'auth': true,
+      'bifrost': true,
+      'console': true,
+      'console-v2': true,
+      'core': true,
+      'frontend-proxy': true,
+      'jsreports': true,
+      'marketing-frontend': true,
+      'shipping': true,
     }
     console.log(magenta(`Creating new ephemeral environment for ${stackName}.`));
-    console.log(cyan(`Please enter 'y' for each service you want to deploy code to`));
-    console.log(cyan('otherwise just press return and the service will use a production image.'));
-    Object.keys(servicesRequested).forEach(service => {
-      const serviceName = cyan(service);
-      const response = question(`Do you want ${serviceName}? (y/N)`);
-      servicesRequested[service] = ['y', 'Y'].includes(response);
-    })
     const serviceList = Object.entries(servicesRequested).reduce((acc, [key, val]) => {
       if (val) acc.push(key);
       return acc;
@@ -48,6 +41,7 @@ namespace('eph', () => {
 
     const timesToLive = {
       hour: '1 hour',
+      '3_hour': '3 hours',
       b_day: 'business day til 18:30',
       day: '1 day',
       b_week: 'business week M-F',
