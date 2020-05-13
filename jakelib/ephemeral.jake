@@ -71,7 +71,7 @@ namespace('eph', () => {
         terraform_vars: {
             stack_name: stackName,
             ephemeral_tag: response,
-            git_reference: 'eph-wip',
+            git_reference: 'eph-save',
             requested_service_names: Object.entries(servicesRequested).reduce((arr, [service, requested]) => {
               return requested ? [...arr, service] : arr;
             }, []),
@@ -80,6 +80,7 @@ namespace('eph', () => {
     }
     try {
       await SQS.sendMessage(payload).promise();
+      jake.exec(`ssh ec2-user@peon /home/ec2-user/seed-data-execution-directory/executor-tools/executor.sh ${stackName}`, { printStdout: true });
     } catch (e) {
       console.log('Failed to send SQS message to create the stack. Error:', e)
     }
