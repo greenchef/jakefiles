@@ -1,165 +1,86 @@
-const { getBranchOrTag, serviceToPath } = require('./utils');
+const { serviceToPath } = require('./utils');
 
 const ECR_URL = '052248958630.dkr.ecr.us-west-2.amazonaws.com';
 
-const replacer = (value, variables) => {
-  if(!value) return value;
+const { AWS_DEFAULT_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } = process.env;
 
-  const var_pattern = /(#[A-Za-z0-9_]+#)|({{[A-Za-z0-9_]+}})/g;
-  value.match(var_pattern).forEach(matched_var => {
-    const idx = value.indexOf(matched_var);
-    if (idx > -1) {
-      const value_for_replace = variables[matched_var.replace(/#|{{|}}/g, "")];
-      if (value_for_replace != null) {
-        value = value.replace(new RegExp(matched_var, "g"), value_for_replace);
-      }
-    }
-  });
-  return value;
+const core_services = ['web-api', 'console-api', 'worker'];
+const shipping_services = ['shipping-api', 'shipping-worker'];
+const auth_services = ['auth-api', 'auth-worker'];
+
+const constructBuildArgs = argObj => Object.entries(argObj).reduce((acc, [key, val]) => `${acc} --build-arg ${key}=${val}`, '');
+
+const getPushCommands = ({ app_name, stack_name }) => {
+  if (core_services.includes(app_name)) return [
+    `docker tag ${stack_name}-${app_name}:latest ${ECR_URL}/eph-core-root:${stack_name}`,
+    `echo Pushing to ${ECR_URL}/eph-core-root:${stack_name}`,
+    `docker push ${ECR_URL}/eph-core-root:${stack_name}`,
+  ]
+  if (shipping_services.includes(app_name)) return [
+    `docker tag ${stack_name}-${app_name}:latest ${ECR_URL}/eph-shipping-root:${stack_name}`,
+    `echo Pushing to ${ECR_URL}/eph-shipping-root:${stack_name}`,
+    `docker push ${ECR_URL}/eph-shipping-root:${stack_name}`,
+  ]
+  if (auth_services.includes(app_name)) return [
+    `docker tag ${stack_name}-${app_name}:latest ${ECR_URL}/eph-auth-root:${stack_name}`,
+    `echo Pushing to ${ECR_URL}/eph-auth-root:${stack_name}`,
+    `docker push ${ECR_URL}/eph-auth-root:${stack_name}`,
+  ]
+  return [
+    `docker tag ${stack_name}-${app_name}:latest ${ECR_URL}/eph-${app_name}:${stack_name}`,
+    `echo Pushing to ${ECR_URL}/eph-${app_name}:${stack_name}`,
+    `docker push ${ECR_URL}/eph-${app_name}:${stack_name}`,
+  ]
 }
 
-const buildCmdString = (path, stack_name, app_name) => {
+const getDeployCommands = ({ app_name, stack_name }) => {
+  const cdPath = serviceToPath(app_name);
+  const buildArgs = constructBuildArgs({
+    ENVIRONMENT: 'eph',
+    STACK_NAME: stack_name,
+    AWS_DEFAULT_REGION,
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+  });
+
   const cmds = [
-    `cd ${path}`,
-    ...apps[app_name].cmds,
+    `cd ${cdPath}`,
+    'eval $(aws ecr get-login --no-include-email --region us-west-2)',
+    `echo Build started on ${(new Date()).toLocaleTimeString()}`,
+    `docker build -t ${stack_name}-${app_name} . ${buildArgs}`,
+    ...(getPushCommands({ app_name, stack_name })),
+    `echo Restarting service eph-${stack_name}-${app_name}`,
   ];
-  return replacer(cmds.join(' && '), { stack_name, app_name });
-};
 
-const getDeployCommands = (app_name, args = '') => ([
-  'eval $(aws ecr get-login --no-include-email --region us-west-2)',
-  `docker build -t {{stack_name}}-${app_name} . ${args} --no-cache`,
-  `docker tag {{stack_name}}-${app_name}:latest ${ECR_URL}/eph-${app_name}:{{stack_name}}`,
-  `docker push ${ECR_URL}/eph-${app_name}:{{stack_name}}`,
-])
-const coreRootCommands = getDeployCommands('core-root', '-f ./Dockerfile')
-const shippingRootCommands = getDeployCommands('shipping-root', '-f ./Dockerfile')
+  if (core_services.includes(app_name)) {
+    cmds.push(
+      `aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-core-web-api --force-new-deployment`,
+      `aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-core-console-api --force-new-deployment`,
+      `aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-core-worker --force-new-deployment`,
+    )
+  } else if (shipping_services.includes(app_name)) {
+    cmds.push(
+      `aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-shipping-api --force-new-deployment`,
+      `aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-shipping-worker --force-new-deployment`,
+    )
+  } else if (auth_services.includes(app_name)) {
+    cmds.push(
+      `aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-auth-api --force-new-deployment`,
+      `aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-auth-worker --force-new-deployment`,
+    )
+  } else cmds.push(`aws ecs update-service --cluster eph-ephemeral --service eph-${stack_name}-${app_name} --force-new-deployment`);
 
-const apps = {
-  // CORE API
-  'core-console-api': { cmds: coreRootCommands },
-  'core-scheduler': { cmds: coreRootCommands },
-  'core-web-api': { cmds: coreRootCommands },
-  'core-worker': { cmds: coreRootCommands },
+  return cmds.join('&&');
+}
 
-  // SHIPPING
-  'shipping-api': { cmds: shippingRootCommands },
-  'shipping-scheduler': { cmds: shippingRootCommands },
-  'shipping-worker': { cmds: shippingRootCommands },
 
-  'console': {
-    cmds: [
-      './node_modules/.bin/gulp buildDocker --env=eph --stack_name={{stack_name}}',
-      ...getDeployCommands('console'),
-      './node_modules/.bin/gulp build --env=dev',
-    ]
-  },
-
-  'jsreports': { cmds: getDeployCommands('jsreports') },
-
-  'bifrost': { cmds: getDeployCommands('bifrost') }
-};
-
-namespace('deploy-eph-1', function () {
+namespace('deploy-eph', () => {
   desc('Deploy application | [stack_name,app_name]');
-  task('app', ['aws:loadCredentials'], { async: false }, function(stack_name, app_name) {
-    const path = serviceToPath(app_name);
-    if (!path) {
-      console.error(`Unknown app/service: ${app_name}.`);
-      return;
-    }
-
-    const cmds = [
-      buildCmdString(path, stack_name, app_name),
-    ];
-
-    jake.exec(cmds.join(' && '), { printStdout: true }, function(){
-      jake.Task['ecs-eph:restart'].execute(stack_name, app_name);
-      // jake.Task['slack:deployment'].execute(cluster_name, app_name);
-      complete();
-    });
-  });
-
-  desc('Deploy consumer | [stack_name]');
-  task('consumer', ['aws:loadCredentials'], { async: true }, async function(stack_name) {
-    const app_name = 'consumer'
-    const branch = await getBranchOrTag(app_name);
-
-    const cmdsTemplate = [
-      `cd ${process.env.PATH_TO_CONSUMER}`,
-      ...getDeployCommands(app_name, `-f ./docker/non-cdn.dockerfile --build-arg ENV=releaseEphemeral --build-arg STACK_NAME_ARG=${stack_name} --build-arg BRANCH=${branch}`),
-    ];
-    const cmds = replacer(cmdsTemplate.join(' && '), { stack_name })
-
-    jake.exec(cmds, { printStdout: true }, function(){
-      jake.Task['ecs-eph:restart'].execute(stack_name, app_name);
-      // jake.Task['slack:deployment'].execute(cluster_name, 'consumer');
-      complete();
-    });
-  })
-
-  desc('Deploy console-v2 | [stack_name]');
-  task('console-v2', ['aws:loadCredentials'], { async: false }, async function(stack_name) {
-    const app_name = 'console-v2'
-
-    const cmdsTemplate = [
-      `cd ${process.env.PATH_TO_CONSOLE_V2}`,
-      `STACK_NAME=${stack_name} npm run build-eph`,
-      ...getDeployCommands('console-v2'),
-    ];
-    const cmds = replacer(cmdsTemplate.join(' && '), { stack_name })
-
-    jake.exec(cmds, { printStdout: true }, function(){
-      jake.Task['ecs-eph:restart'].execute(stack_name, app_name);
-      // jake.Task['slack:deployment'].execute(cluster_name, 'consumer');
-      complete();
-    });
-  })
-
-  desc('Deploy all core services (console-api, web-api, worker, scheduler) | [stack_name]');
-  task('core', ['aws:loadCredentials'], { async: false }, function(stack_name) {
-    const appNames = [
-      'core-console-api',
-      'core-scheduler',
-      'core-web-api',
-      'core-worker',
-    ];
-
-    const cmdsTemplate = [
-      `cd ${process.env.PATH_TO_SERVER}`,
-      ...coreRootCommands,
-    ];
-    const cmds = replacer(cmdsTemplate.join(' && '), { stack_name })
-
-    jake.exec(cmds, { printStdout: true }, function(){
-      appNames.forEach(app_name => {
-        jake.Task['ecs-eph:restart'].execute(stack_name, app_name);
-        // jake.Task['slack:deployment'].execute(cluster_name, service);
-      });
-      complete();
-    });
-  });
-
-  desc('Deploy all shipping services (shipping-api, shipping-worker, shipping-scheduler) | [stack_name]');
-  task('shipping', ['aws:loadCredentials'], { async: false }, function(stack_name) {
-    const appNames = [
-      'shipping-api',
-      'shipping-scheduler',
-      'shipping-worker',
-    ];
-
-    const cmdsTemplate = [
-      `cd ${process.env.PATH_TO_SHIPPING}`,
-      ...shippingRootCommands,
-    ];
-
-    const cmds = replacer(cmdsTemplate.join(' && '), { stack_name })
-
-    jake.exec(cmds, { printStdout: true }, function(){
-      appNames.forEach(app_name => {
-        jake.Task['ecs-eph:restart'].execute(stack_name, app_name);
-        // jake.Task['slack:deployment'].execute(cluster_name, service);
-      });
+  task('app', ['aws:loadCredentials'], { async: true }, (stack_name, app_name) => {
+    const cmdString = getDeployCommands({ app_name, stack_name });
+    jake.exec(cmdString, { printStdout: true }, () => {
+      console.log("app_name", app_name)
+      jake.Task['slack:deployment'].execute(`eph-${stack_name}`, app_name);
       complete();
     });
   });
