@@ -43,8 +43,6 @@ namespace('eph', () => {
       return acc;
     }, []);
 
-    console.log(`\nOkay, you will need deploy these services to your stack:\n${green(serviceList.sort().map(x => `${x} +`).join('\n'))}\n`);
-
     const timesToLive = {
       hour: '1 hour',
       '3_hour': '3 hours',
@@ -92,6 +90,13 @@ namespace('eph', () => {
     } catch (e) {
       console.log('Failed to send SQS message to create the stack. Error:', e)
     }
+  })
 
+  task('seed', ['aws:loadCredentials'], { async: true }, async stackName => {
+    const response = question(`Are you sure you want to seed the environment eph-${stackName}? y/n: `);
+    if (response.toLowerCase() === 'y') {
+      console.log(cyan(`Seeding eph-${stackname}`));
+      jake.exec(`ssh ec2-user@peon /home/ec2-user/seed-data-execution-directory/executor-tools/executor.sh ${stackName}`, { printStdout: true });
+    }
   })
 })
