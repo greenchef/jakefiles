@@ -95,7 +95,7 @@ namespace('eph', () => {
   task('seed', ['aws:loadCredentials'], { async: true }, async stackName => {
     const response = question(`Are you sure you want to seed the environment eph-${stackName}? y/n: `);
     if (response.toLowerCase() === 'y') {
-      console.log(cyan(`Seeding eph-${stackname}`));
+      console.log(cyan(`Seeding eph-${stackName}`));
       jake.exec(`ssh ec2-user@peon /home/ec2-user/seed-data-execution-directory/executor-tools/executor.sh ${stackName}`, { printStdout: true });
     }
   })
