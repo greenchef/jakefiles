@@ -21,7 +21,7 @@ namespace('eph', () => {
     }
     stackName = stackName.toLowerCase();
     if (stackName.length < 1 || stackName.length > 6 || stackName.replace(/\w/g, '').length > 0) {
-      red('`stackname` must be alphanumeric and between 1 and 6 characters long!')
+      console.log(red('`stackname` must be alphanumeric and between 1 and 6 characters long!'));
       return;
     }
 
