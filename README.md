@@ -26,7 +26,7 @@ for more details about ephemeral environments.
     jake eph:create['STACK']
     
     Example:
-    jake pipeline:deploy['coffee']
+    jake eph:create['coffee']
     ```
    - STACK will be used to name all the infrastructure elements that will be created for the environment (ex. task
    names like `eph-coffee-console`, subdomains like `https://eph-coffee-console.greenchef.com/`, pipelines like
