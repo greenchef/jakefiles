@@ -24,26 +24,4 @@ namespace('ecr', function () {
 			complete();
 		});
 	});
-
-  // task('copyApps', ['aws:loadCredentials'], { async: true }, function(from_cluster, to_cluster, apps) {
-	// const config = jake.Task["aws:loadCredentials"].value
-  // const cmds = ['eval $(aws ecr get-login --no-include-email --region us-west-2)'];
-
-  //   apps.forEach(app_name => {
-  //     cmds.push(`docker pull 052248958630.dkr.ecr.us-west-2.amazonaws.com/${from_cluster}-${app_name}:latest`);
-  //     cmds.push(`docker tag 052248958630.dkr.ecr.us-west-2.amazonaws.com/${from_cluster}-${app_name}:latest 052248958630.dkr.ecr.us-west-2.amazonaws.com/${to_cluster}-${app_name}:latest`);
-  //     cmds.push(`docker push 052248958630.dkr.ecr.us-west-2.amazonaws.com/${to_cluster}-${app_name}:latest`)
-  //   });
-
-  //   cmds.push('docker image prune -a -f');
-
-	// 	jake.exec(cmds, { printStdout: true }, function(){
-  //     apps.forEach(app_name => {
-  //       jake.Task['ecs:restart'].execute(to_cluster, `${to_cluster}-${app_name}`);
-  //       jake.Task['slack:deployment'].execute(to_cluster, app_name);
-  //     });
-
-	// 		complete();
-	// 	});
-	// });
 });
