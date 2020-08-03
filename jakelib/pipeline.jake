@@ -63,7 +63,7 @@ namespace('pipeline', function () {
     const allowed_clusters = Object.keys(CLUSTERS.stag)
     allowed_clusters.push('eph');
 
-    if (!allowed_clusters.includes(cluster)) throw new Error(`Not a supported cluster. Supported clusters: ${allowed_envs.toString()}`)
+    if (!allowed_clusters.includes(cluster)) throw new Error(`Not a supported cluster. Supported clusters: ${allowed_clusters.toString()}`)
     const additionalPayload = ephStack ? `, "ephStack": "${ephStack}"` : '';
 		const cmds = [
       `aws lambda invoke --function-name ${REFRESHER_ARN} --cli-binary-format raw-in-base64-out --invocation-type Event --payload '{"optionalEnv":"${cluster}"${additionalPayload}}' response.json`
