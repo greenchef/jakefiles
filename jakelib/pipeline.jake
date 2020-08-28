@@ -1,7 +1,6 @@
 const { getUsername } = require('./utils');
 
-const YMIR_ARN = 'arn:aws:lambda:us-west-2:052248958630:function:deployer-ymir';
-const REFRESHER_ARN = 'arn:aws:lambda:us-west-2:052248958630:function:pre-prod-deployer';
+const { REFRESHER_ARN, YMIR_ARN } = process.env;
 
 const CLUSTERS = {
   prod: {
