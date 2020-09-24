@@ -71,7 +71,7 @@ namespace('eph', () => {
       QueueUrl: 'https://sqs.us-west-2.amazonaws.com/052248958630/terraform-ephemeral-agent',
       MessageBody: JSON.stringify({
         workspace_dir: 'eph/ephemeral/ecs',
-        terraform_version: '0.12.26',
+        terraform_version: '0.13.3',
         terraform_vars: {
             stack_name: stackName,
             ephemeral_tag: response,
