@@ -1,20 +1,6 @@
-const { getUsername } = require('./utils');
+const { CLUSTERS_PROTECTION_STATUS, getUsername } = require('./utils');
 
 const { REFRESHER_ARN, YMIR_ARN } = process.env;
-
-const CLUSTERS = {
-  prod: {
-    lv : { protected: true },
-  },
-  stag: {
-    pp: { protected: true },
-    one: { protected: false },
-    two: { protected: false },
-    qe: { protected: false },
-    uat: { protected: false },
-  },
-  eph: { protected: false },
-}
 
 const REPOS = [
   'app-greenchef',
@@ -35,14 +21,14 @@ namespace('pipeline', function () {
 
     if (environment !== 'eph') {
       try {
-        let a = CLUSTERS[environment][cluster].protected;
+        let a = CLUSTERS_PROTECTION_STATUS[environment][cluster].protected;
       } catch (e) {
         throw new Error(`environment and cluster MISMATCH "${cluster}" is not a valid "${environment}" cluster`)
       }
-  
-      const IS_PROTECTED_TARGET = CLUSTERS[environment][cluster].protected;
+
+      const IS_PROTECTED_TARGET = CLUSTERS_PROTECTION_STATUS[environment][cluster].protected;
       const IS_RELEASE_BRANCH = toBranch.includes('release/') || toBranch.includes('hotfix/');
-  
+
       if (IS_PROTECTED_TARGET && !IS_RELEASE_BRANCH) throw new Error(`PROTECTED cluster "${environment}-${cluster}" must target a release or hotfix tag`);
     }
 
@@ -56,10 +42,10 @@ namespace('pipeline', function () {
     console.log('If the execution was successful, you will get a 202 response code below:');
     jake.exec(cmds, { printStdout: true });
   });
-  
+
   desc('Refresh via pipeline. | [\'cluster\',optional:\'ephemeral stack\']');
 	task('refresh', ['aws:loadCredentials'], { async: true }, function(cluster, ephStack) {
-    const allowed_clusters = Object.keys(CLUSTERS.stag)
+    const allowed_clusters = Object.keys(CLUSTERS_PROTECTION_STATUS.stag)
     allowed_clusters.push('eph');
 
     if (!allowed_clusters.includes(cluster)) throw new Error(`Not a supported cluster. Supported clusters: ${allowed_clusters.toString()}`)
