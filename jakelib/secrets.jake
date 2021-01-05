@@ -1,13 +1,9 @@
-const { cyan, green, magenta, red } = require('chalk');
+const { cyan, green, red } = require('chalk');
 
 const { question } = require('readline-sync');
+const { CLUSTERS_BY_ENV } = require('./utils')
 
-const CLUSTERS = {
-	prod: ['lv'],
-	stag: ['pp', 'one', 'two', 'qe', 'uat'],
-}
-
-const { GITHUB_USERNAME, MIMIR_CREATOR_ARN, MIMIR_ROTATOR_ARN } = process.env; 
+const { GITHUB_USERNAME, MIMIR_CREATOR_ARN, MIMIR_ROTATOR_ARN } = process.env;
 
 namespace('secrets', function () {
 	desc('Copy images from one cluster to another | [from_secret, to_secret]');
@@ -29,8 +25,8 @@ namespace('secrets', function () {
 
 	desc('Creates new  | [environment, stack name]');
 	task('core-create', ['aws:loadCredentials'], function(env, stack) {
-		const isValidStack = CLUSTERS[env] && CLUSTERS[env].includes(stack);
-		if (!isValidStack) throw new Error(red(`Not a supported cluster. Supported clusters: \n${cyan(JSON.stringify(CLUSTERS))}`));
+		const isValidStack = CLUSTERS_BY_ENV[env] && CLUSTERS_BY_ENV[env].includes(stack);
+		if (!isValidStack) throw new Error(red(`Not a supported cluster. Supported clusters: \n${cyan(JSON.stringify(CLUSTERS_BY_ENV))}`));
 		const response = question(cyan(`Are you sure you want to create new core credentials in ${env}-${stack}? Y/n:\n`));
 		if (response.toLowerCase() !== 'y') {
       console.log(green('OK, exiting.'));
@@ -45,8 +41,8 @@ namespace('secrets', function () {
 	});
 
 	task('core-rotate', ['aws:loadCredentials'], function(env, stack) {
-		const isValidStack = CLUSTERS[env] && CLUSTERS[env].includes(stack);
-		if (!isValidStack) throw new Error(red(`Not a supported cluster. Supported clusters: \n${cyan(JSON.stringify(CLUSTERS))}`));
+		const isValidStack = CLUSTERS_BY_ENV[env] && CLUSTERS_BY_ENV[env].includes(stack);
+		if (!isValidStack) throw new Error(red(`Not a supported cluster. Supported clusters: \n${cyan(JSON.stringify(CLUSTERS_BY_ENV))}`));
 		const responseA = question(cyan(`Have you restarted the Core services in ${env}-${stack} ECS after running create? Y/n:\n`));
 		if (responseA.toLowerCase() !== 'y') {
 			console.log(red(`You MUST restart the Core services in ${env}-${stack} ECS before proceeding!`))

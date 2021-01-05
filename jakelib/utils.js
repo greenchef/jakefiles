@@ -83,6 +83,26 @@ const replacer = (value, variables) => {
   return value;
 }
 
+const CLUSTERS_PROTECTION_STATUS = {
+    prod: {
+        lv : { protected: true },
+    },
+    stag: {
+        pp: { protected: true },
+        one: { protected: false },
+        two: { protected: false },
+        qe: { protected: false },
+        uat: { protected: false },
+    },
+};
+
+const CLUSTERS_BY_ENV = Object.keys(CLUSTERS_PROTECTION_STATUS).reduce((list, env) => ({
+    ...list,
+    [env]: Object.keys(CLUSTERS_PROTECTION_STATUS[env])
+}), {});
+
+exports.CLUSTERS_BY_ENV = CLUSTERS_BY_ENV
+exports.CLUSTERS_PROTECTION_STATUS = CLUSTERS_PROTECTION_STATUS
 exports.getBranchOrTag = getBranchOrTag;
 exports.getUsername = getUsername;
 exports.replacer = replacer;
