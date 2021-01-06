@@ -33,22 +33,22 @@ function pull_and_checkout() {
     fi
 }
 
-function retrieve_secrets() {
-    echo "Retrieving secrets for ${PROJECT}"
-    cd "${PROJECT_DIR}" || exit
-    node ./build/secret-retrieval.js "${CLUSTER}" "${SERVICE}"
-}
-
 function run_build() {
     echo "building ${PROJECT}"
     cd "${PROJECT_DIR}" || exit
     npm run build
 }
 
+function retrieve_secrets() {
+    echo "Retrieving secrets for ${PROJECT}"
+    cd "${PROJECT_DIR}" || exit
+    node ${SUB_DIR}/secret-retrieval.js "${CLUSTER}" "${SERVICE}"
+}
+
 function run_script() {
     echo "running script ${SCRIPT_NAME} with ${SCRIPT_ARGS} in ${PROJECT_DIR}"
     cd "${PROJECT_DIR}" || exit
-    node "./build/scripts/${SCRIPT_NAME}" "$SCRIPT_ARGS"
+    node "${SUB_DIR}/scripts/${SCRIPT_NAME}" "$SCRIPT_ARGS"
 }
 
 function clean_up() {
@@ -56,11 +56,18 @@ function clean_up() {
     pull_and_checkout master
 }
 
+# echo_args
+
 # pull specific project, checkout specified branch
 pull_and_checkout "${BRANCH}"
 
 # npm run build
-run_build
+{
+  run_build &&
+    SUB_DIR="./build"
+} || {
+  SUB_DIR="."
+}
 
 # copy secrets of specified branch
 retrieve_secrets
@@ -68,6 +75,6 @@ retrieve_secrets
 # run script from build dir with args
 run_script
 
-# echo_args
+clean_up
 
 echo "done running script"
