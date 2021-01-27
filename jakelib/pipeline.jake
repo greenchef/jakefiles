@@ -10,8 +10,9 @@ const REPOS = [
   'console-web',
   'frontend-proxy',
   'greenchef',
-  'reports',
+  'inbound-optimization-platform',
   'marketing-frontend',
+  'reports',
   'shipping-platform',
 ];
 
