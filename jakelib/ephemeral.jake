@@ -1,8 +1,10 @@
 const AWS = require('aws-sdk');
+const fs = require('fs');
 
 const { cyan, green, magenta, red } = require('chalk');
 const { question } = require('readline-sync');
 
+const { RAGNAROK_ARN } = process.env;
 
 const SQS = new AWS.SQS({
   apiVersion: '2012-11-05',
@@ -91,6 +93,17 @@ namespace('eph', () => {
       console.log('Failed to send SQS message to create the stack. Error:', e)
     }
   })
+  
+  task('destroy', ['aws:loadCredentials'], { async: true }, async stackName => {
+    const response = question(`Are you sure you want to destroy the environment eph-${stackName}? y/n `);
+    if (response.toLowerCase() === 'y') {
+      console.log(cyan(`\nDestroying eph-${stackName}.\n`))
+      await jake.exec(`aws lambda invoke --function-name ${RAGNAROK_ARN} --cli-binary-format raw-in-base64-out --invocation-type RequestResponse --payload '{ "stack": "${stackName}" }' response.json`, { printStdout: true });
+      const { body, statusCode } = JSON.parse(fs.readFileSync('response.json'));
+      const color = statusCode === 200 ? green : red;
+     console.log(color(`\n${body}\n`));
+    }
+  });
 
   task('seed', ['aws:loadCredentials'], { async: true }, async stackName => {
     const response = question(`Are you sure you want to seed the environment eph-${stackName}? y/n: `);
