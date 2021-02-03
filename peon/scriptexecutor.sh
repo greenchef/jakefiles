@@ -33,6 +33,12 @@ function pull_and_checkout() {
     fi
 }
 
+function npm_install() {
+  echo 'installing npm dependencies'
+  cd "${PROJECT_DIR}" || exit
+  npm i
+}
+
 function run_build() {
     echo "building ${PROJECT}"
     cd "${PROJECT_DIR}" || exit
@@ -46,9 +52,9 @@ function retrieve_secrets() {
 }
 
 function run_script() {
-    echo "running script ${SCRIPT_NAME} with ${SCRIPT_ARGS} in ${PROJECT_DIR}"
+    echo "running script ${SCRIPT_NAME} with args [${SCRIPT_ARGS}] in ${PROJECT_DIR}"
     cd "${PROJECT_DIR}" || exit
-    node "${SUB_DIR}/scripts/${SCRIPT_NAME}" "$SCRIPT_ARGS"
+    APP_CLUSTER=${CLUSTER} APP_SERVICE=${SERVICE} node "${SUB_DIR}/scripts/${SCRIPT_NAME}" "$SCRIPT_ARGS"
 }
 
 function clean_up() {
@@ -60,6 +66,9 @@ function clean_up() {
 
 # pull specific project, checkout specified branch
 pull_and_checkout "${BRANCH}"
+
+# npm install
+npm_install
 
 # npm run build
 {
