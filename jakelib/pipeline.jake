@@ -14,6 +14,7 @@ const REPOS = [
   'marketing-frontend',
   'reports',
   'shipping-platform',
+  'tools',
 ];
 
 namespace('pipeline', function () {
