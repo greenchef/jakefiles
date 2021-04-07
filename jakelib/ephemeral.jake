@@ -38,6 +38,8 @@ namespace('eph', () => {
       'jsreports': true,
       'marketing-frontend': true,
       'shipping': true,
+      'warehouse': true,
+      'tools': true,
     }
     console.log(magenta(`Creating new ephemeral environment for ${stackName}.`));
     const serviceList = Object.entries(servicesRequested).reduce((acc, [key, val]) => {
